@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FaceAuth | Attendance Portal</title>
+  <meta name="theme-color" content="#153831">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ========================================== -->
+<!-- 1. AUTH & PORTAL LANDING VIEW (COMPACT SINGLE-SCREEN, NO SCROLL) -->
+<!-- ========================================== -->
+<section id="v-login" class="view login active">
+  <header class="portal-topbar">
+    <div class="portal-brand">
+      <div class="college-crest-icon">🏛️</div>
+      <div class="brand-titles">
+        <span class="portal-title">FaceAuth</span>
+        <span class="portal-subtitle">Faculty Attendance & Biometric Portal</span>
+      </div>
+    </div>
+    <div class="portal-top-meta">
+      <span class="academic-tag"></span>
+    </div>
+  </header>
+
+  <div class="portal-body-wrapper">
+    <!-- LEFT COLUMN: INSTITUTIONAL BRANDING -->
+    <div class="portal-intro-col">
+      <div class="portal-system-badge">College Attendance System</div>
+      <h1 class="portal-hero-title">Automated Face Attendance for College Classes.</h1>
+      <p class="portal-hero-description">
+        Facial biometric verification with instant roster synchronization, automated <span data-min-limit>75</span>% university defaulter compliance tracking, and official semester examination registers.
+      </p>
+
+      <div class="portal-feature-pills">
+        <div class="portal-feat-pill">
+          <span class="feat-icon">⚡</span>
+          <div>
+            <b>Instant Face Biometrics</b>
+            <span>High-precision angle verification</span>
+          </div>
+        </div>
+        <div class="portal-feat-pill">
+          <span class="feat-icon">⚖️</span>
+          <div>
+            <b><span data-min-limit>75</span>% Criteria Guard</b>
+            <span>Automated university defaulter tracking</span>
+          </div>
+        </div>
+        <div class="portal-feat-pill">
+          <span class="feat-icon">📄</span>
+          <div>
+            <b>University Registers</b>
+            <span>A4 print-ready sheets & CSV export</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="portal-dept-strip">
+        <span class="dept-label">Academic Departments:</span>
+        <span class="dept-badge">CSE</span>
+        <span class="dept-badge">IT</span>
+        <span class="dept-badge">ECE</span>
+        <span class="dept-badge">MECH</span>
+        <span class="dept-badge">CIVIL</span>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: FACULTY LOGIN CARD -->
+    <div class="portal-card-col">
+      <!-- SIGN IN CARD -->
+      <div class="portal-login-card" id="login-box">
+        <div class="login-card-head">
+          <h3>Faculty Sign In Portal</h3>
+          <p class="muted">Access department sections and take lecture attendance.</p>
+        </div>
+
+        <!-- PROMINENT ONE-CLICK DEMO BUTTON -->
+        <button class="btn btn-demo-prominent btn-block" id="quick-demo-btn" type="button">
+          <span class="demo-bolt">⚡</span>
+          <div class="demo-btn-text">
+            <b>1-Click CSE HOD Demo Login</b>
+            <small>Uses the current CSE HOD account</small>
+          </div>
+        </button>
+
+        <div class="card-or-divider">
+          <span>or enter faculty credentials</span>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="l-id">Teacher ID or University Email</label>
+            <input id="l-id" type="text" placeholder="Enter your current Teacher ID or university email" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="l-pw">Password</label>
+            <input id="l-pw" type="password" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+          <p id="l-err" class="alert-msg danger" hidden></p>
+          <button class="btn primary btn-block btn-lg" id="l-btn" type="button">Sign In to Faculty Portal</button>
+        </form>
+
+        <div class="login-card-footer">
+          <span class="muted">New faculty member?</span>
+          <button class="btn-text-link" id="show-signup" type="button">Register Faculty Account</button>
+        </div>
+      </div>
+
+      <!-- SIGN UP CARD (FLIPPED IN PLACE) -->
+      <div class="portal-login-card" id="signup-box" hidden>
+        <div class="login-card-head">
+          <h3>Register Faculty Account</h3>
+          <p class="muted">Create an instructor account to manage course attendance.</p>
+        </div>
+
+        <form id="signup-form">
+          <div class="form-group">
+            <label for="su-name">Full Name</label>
+            <input id="su-name" type="text" placeholder="e.g. Dr. Ramesh Gupta" required autocomplete="name">
+          </div>
+          <div class="form-group">
+            <label for="su-email">College Email Address</label>
+            <input id="su-email" type="email" placeholder="e.g. ramesh.g@college.edu" required autocomplete="email">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="su-dept">Department</label>
+              <select id="su-dept">
+                <option value="CSE">Computer Science (CSE)</option>
+                <option value="IT">Information Tech (IT)</option>
+                <option value="ECE">Electronics (ECE)</option>
+                <option value="MECH">Mechanical (MECH)</option>
+                <option value="CIVIL">Civil (CIVIL)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="su-desig">Designation</label>
+              <input id="su-desig" type="text" placeholder="e.g. Asst. Professor" value="Assistant Professor">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="su-pw">Password</label>
+              <input id="su-pw" type="password" minlength="4" required placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label for="su-confirm">Confirm</label>
+              <input id="su-confirm" type="password" minlength="4" required placeholder="••••••••">
+            </div>
+          </div>
+          <div class="form-group faculty-id-upload">
+            <label for="su-id-card">Faculty ID Card <span class="muted">(optional)</span></label>
+            <input id="su-id-card" type="file" accept="image/jpeg,image/png,application/pdf">
+            <small class="muted">Upload a JPG, PNG, or PDF up to 1 MB.</small>
+            <div id="su-id-card-preview" class="faculty-id-preview" hidden>
+              <img id="su-id-card-image" alt="Faculty ID card preview" hidden>
+              <span id="su-id-card-name"></span>
+              <button id="su-id-card-remove" type="button" class="btn-xs">Remove</button>
+            </div>
+          </div>
+          <p id="su-msg" class="alert-msg danger" hidden></p>
+          <div class="signup-form-actions">
+            <button class="btn" id="signup-reset" type="reset">Reset Form</button>
+            <button class="btn primary" type="submit">Create Faculty Account</button>
+          </div>
+        </form>
+
+        <div class="login-card-footer">
+          <span class="muted">Already registered?</span>
+          <button class="btn-text-link" id="show-login" type="button">Return to Sign In</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================== -->
+<!-- 2. MAIN APPLICATION SHELL -->
+<!-- ========================================== -->
+<div id="shell" hidden>
+  <div id="offline-banner" class="offline-banner" role="status" hidden>You are offline. Saved attendance data remains available on this device. <button id="offline-update-button" type="button" hidden>Update available · Reload</button></div>
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="college-crest-sm" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M3 9h18L12 4 3 9Z"/><path d="M5 10v8m4-8v8m6-8v8m4-8v8M3 20h18M4 18h16"/></svg>
+      </div>
+      <div class="brand-info">
+        <b class="portal-name">College Attendance</b>
+        <span class="portal-sub">Faculty System</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#dashboard" data-nav="dashboard" class="nav-item on">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#faculty" data-nav="faculty" class="nav-item" id="faculty-nav" hidden><span class="nav-icon" aria-hidden="true">♙</span><span>Faculty</span></a>
+      <a href="#students" data-nav="students" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <span>Students</span>
+      </a>
+      <a href="#subjects" data-nav="subjects" class="nav-item">
+        <span class="nav-icon" aria-hidden="true">▤</span>
+        <span>Subjects</span>
+      </a>
+      <a href="#student-edit" data-nav="student-edit" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></span>
+        <span>Edit Student Profiles</span>
+      </a>
+      <a href="#register" data-nav="register" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 7h-3l-2-3H9L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+        <span>Register Student</span>
+      </a>
+      <a href="#setup" data-nav="setup" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/></svg></span>
+        <span>Take Attendance</span>
+      </a>
+      <a href="#history" data-nav="history" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21V3Z"/><path d="M10 8h4m-4 4h4m-4 4h4"/></svg></span>
+        <span>Session History</span>
+      </a>
+      <a href="#audit-log" data-nav="audit-log" class="nav-item"><span class="nav-icon" aria-hidden="true">▤</span><span>Audit Log</span></a>
+      <a href="#reports" data-nav="reports" class="nav-item">
+        <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17"/><rect x="7" y="12" width="3" height="5" rx=".5"/><rect x="13" y="8" width="3" height="9" rx=".5"/><rect x="19" y="4" width="3" height="13" rx=".5"/></svg></span>
+        <span>Reports & Defaulters</span>
+      </a>
+      <a href="#defaulters" data-nav="defaulters" class="nav-item"><span class="nav-icon" aria-hidden="true">⚠</span><span>Defaulters</span></a>
+    </nav>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="t-avatar">AS</div>
+      <div class="user-details">
+        <b id="t-name">Mrs. Anuksha Srivastava</b>
+        <span id="t-role" class="muted">HOD · CSE Dept</span>
+      </div>
+      <div class="user-menu-actions">
+        <button class="btn-xs" id="btn-reset-demo" title="Reset dataset to demo">Reset Data</button>
+        <button class="btn-xs danger" id="logout" title="Sign out of portal">Sign out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="app-main">
+    
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: DASHBOARD -->
+    <!-- ---------------------------------------- -->
+    <section id="v-dashboard" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2 id="greet">Good morning, Professor</h2>
+          <p class="muted" id="current-date-time"></p>
+        </div>
+        <div class="header-actions">
+          <span class="badge ok">Minimum attendance: <span data-min-limit>75</span>%</span>
+          <button class="btn primary" id="dash-quick-take-btn" type="button">⚡ Take Live Attendance</button>
+          <button class="btn" id="dash-add-class-btn" type="button">+ Add Section</button>
+        </div>
+      </div>
+
+      <!-- STATS TILES -->
+      <div class="stats-grid" id="stats"></div>
+
+      <!-- TODAY'S SCHEDULE -->
+      <div class="dashboard-section">
+        <div class="section-head">
+          <div>
+            <h3>Today's Lecture Schedule</h3>
+            <p class="muted">Select a scheduled lecture to take attendance.</p>
+          </div>
+          <div class="header-actions">
+            <span class="badge ok" id="today-day-badge">Today</span>
+          <button class="btn btn-secondary" id="schedule-class-btn" type="button">+ Schedule Section</button>
+          </div>
+        </div>
+        <div id="today-classes" class="classes-schedule-list"></div>
+      </div>
+      <div class="dashboard-section card"><div class="section-head"><div><h3>Recognition review queue</h3><p class="muted">Review low-confidence matches before recording attendance.</p></div></div><div id="recognition-review-queue"></div></div>
+      <div class="dashboard-section card" id="hod-subject-summary" hidden><div class="section-head"><div><h3>Subject-wise attendance</h3><p class="muted">Attendance summary for your department and selected term.</p></div></div><div class="table-wrap"><table><thead><tr><th>Subject</th><th>Faculty</th><th>Students</th><th>Attendance</th></tr></thead><tbody id="hod-subject-summary-body"></tbody></table></div></div>
+
+      <!-- RECENT SESSIONS & ALERTS ROW -->
+      <div class="dashboard-grid-two">
+        <div class="card">
+          <div class="section-head">
+            <h3>Recent Attendance Sessions</h3>
+            <button class="btn-text-link" id="dash-view-history" type="button">View all &rarr;</button>
+          </div>
+          <div id="dash-recent-history" class="compact-history-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-head">
+            <h3>Attendance Health & Defaulters</h3>
+            <button class="btn-text-link" id="dash-view-reports" type="button">View reports &rarr;</button>
+          </div>
+          <div id="dash-defaulters-summary" class="defaulter-alert-box"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="v-faculty" class="view">
+      <div class="page-header"><div><button class="btn-back page-back" type="button" data-app-back>← Back</button><h2>Faculty</h2><p class="muted">Manage roles for teachers in your department.</p></div></div>
+      <div class="dashboard-section card"><div class="section-head"><div><h3>Department faculty</h3><p class="muted">Each department can have one HOD.</p></div></div><div id="faculty-list" class="subject-master-list"></div></div>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: CLASSES & STUDENTS -->
+    <!-- ---------------------------------------- -->
+    <section id="v-defaulters" class="view">
+      <div class="page-header"><div><button class="btn-back page-back" type="button" data-app-back>← Back</button><h2>Defaulters</h2><p class="muted">Students below the attendance requirement for the selected term.</p></div><div class="header-actions"><button id="defaulters-export" class="btn" type="button">Export CSV</button><button id="defaulters-print" class="btn primary" type="button">Print notice list</button></div></div>
+      <div id="defaulters-print-header" class="print-only"><h2 id="defaulters-print-college"></h2><p id="defaulters-print-term"></p></div>
+      <div class="card defaulters-filters"><label>Term <select id="def-filter-term"></select></label><label>Department <select id="def-filter-department"><option value="">All departments</option></select></label><label>Year <select id="def-filter-year"><option value="">All years</option></select></label><label>Section <select id="def-filter-section"><option value="">All sections</option></select></label><label>Subject <select id="def-filter-subject"><option value="">All subjects</option></select></label><label>Status <select id="def-filter-status"><option value="all">All</option><option value="warning">Warning</option><option value="critical">Critical</option></select></label><label>Search <input id="def-filter-search" type="search" placeholder="Name or roll number"></label><label class="defaulter-mode"><input id="def-subject-mode" type="checkbox"> Subject-wise defaulters</label></div>
+      <div class="card defaulters-table-wrap"><table class="data-table defaulters-table"><thead><tr><th>Select</th><th>Student</th><th data-def-sort="roll">Roll</th><th data-def-sort="department">Department</th><th data-def-sort="year">Year</th><th data-def-sort="section">Section</th><th data-def-sort="attended">Attended / Total</th><th data-def-sort="percent">Attendance %</th><th>Status</th><th data-def-sort="needed">Classes needed</th><th data-def-sort="canMiss">Can miss</th><th>Subjects</th><th>Actions</th></tr></thead><tbody id="defaulters-table-body"></tbody></table></div>
+    </section>
+
+    <section id="v-students" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Students</h2>
+          <p class="muted">Choose a department, year, and section to open its student list.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn primary" id="student-add-class" type="button">+ Add Section</button>
+        </div>
+      </div>
+
+      <div class="card student-section-picker">
+        <div class="student-section-picker-grid">
+          <div class="form-group">
+            <label for="student-department-filter">Department</label>
+            <select id="student-department-filter"><option value="">Select department</option></select>
+          </div>
+          <div class="form-group">
+            <label for="student-year-filter">Year</label>
+            <select id="student-year-filter" disabled><option value="">Select year</option></select>
+          </div>
+          <div class="form-group">
+            <label for="student-section-filter">Section</label>
+            <select id="student-section-filter" disabled><option value="">Select section</option></select>
+          </div>
+        </div>
+      </div>
+      <div id="student-class-list" class="student-class-grid"></div>
+    </section>
+
+    <section id="v-student-edit" class="view">
+      <div class="page-header">
+        <div>
+          <h2>Edit Student Profiles</h2>
+          <p class="muted">Find a student here to update their profile details.</p>
+        </div>
+      </div>
+      <div class="card student-editor-directory">
+        <div class="section-head student-directory-toolbar">
+          <h3>Student Directory</h3>
+          <input id="student-edit-search" type="search" class="search-sm" placeholder="Search by name or roll number">
+          <div class="student-directory-import-actions"><button id="student-import-csv-open" class="btn btn-secondary" type="button">Import CSV</button><button id="student-import-template" class="btn" type="button">Download template</button></div>
+        </div>
+        <div class="student-edit-filters student-section-picker-grid" aria-label="Filter students by academic placement">
+          <div class="form-group"><label for="student-edit-filter-department">Department</label><select id="student-edit-filter-department"><option value="">All departments</option></select></div>
+          <div class="form-group"><label for="student-edit-filter-year">Academic year</label><select id="student-edit-filter-year"><option value="">All years</option></select></div>
+          <div class="form-group"><label for="student-edit-filter-section">Section</label><select id="student-edit-filter-section"><option value="">All sections</option></select></div>
+        </div>
+        <div class="student-directory-tools">
+          <div id="student-directory-chips" class="student-directory-chips" role="group" aria-label="Quick student filters"></div>
+          <div class="student-directory-count-tools"><span id="student-directory-count" class="muted" aria-live="polite"></span><label>Select <select id="student-selection-menu"><option value="">Choose…</option><option value="page">All on this page</option><option value="matching">All matching filters</option><option value="section">Whole section</option><option value="year">Whole year</option><option value="defaulters">Only defaulters</option><option value="noface">Without face data</option><option value="clear">Clear selection</option></select></label><button id="student-directory-clear" class="btn-xs" type="button">Clear filters</button><label>Rows <select id="student-directory-page-size"><option>25</option><option>50</option><option>100</option></select></label><label class="student-group-toggle"><input id="student-directory-group" type="checkbox"> Group by section</label><label class="student-group-toggle"><input id="student-directory-group-department-year" type="checkbox"> Group by department &amp; year</label></div>
+        </div>
+        <div id="student-bulk-bar" class="student-bulk-bar" hidden>
+          <span id="student-bulk-count" class="muted"></span>
+          <button id="student-bulk-move" class="btn btn-secondary" type="button">Move to…</button>
+          <button id="student-bulk-export" class="btn" type="button">Export selected</button>
+          <button id="student-bulk-delete" class="btn danger-outline" type="button">Delete selected</button>
+          <button id="student-bulk-clear" class="btn" type="button">Clear</button>
+        </div>
+        <div id="student-edit-list" class="student-edit-list"></div>
+        <div id="student-directory-pagination" class="student-directory-pagination"></div>
+      </div>
+      <div id="student-editor-panel" class="card student-editor-panel" hidden>
+        <div class="section-head">
+          <div><h3>Edit Profile</h3><p id="student-editor-selected-name" class="muted"></p></div>
+        </div>
+        <form id="student-edit-form" class="edit-form-mode">
+          <div class="form-group">
+            <label for="student-edit-name">Student Full Name</label>
+            <input id="student-edit-name" type="text" required>
+          </div>
+          <div class="form-group">
+            <label for="student-edit-roll">Roll Number</label>
+            <input id="student-edit-roll" type="text" required>
+          </div>
+          <div class="form-group">
+            <label for="student-edit-admission">Admission Number</label>
+            <input id="student-edit-admission" type="text">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="student-edit-department">Department</label>
+              <select id="student-edit-department" required></select>
+              <input id="student-edit-department-other" type="text" aria-label="Enter a new department" placeholder="Enter department" hidden>
+            </div>
+            <div class="form-group">
+              <label for="student-edit-year">Year</label>
+              <select id="student-edit-year" required></select>
+              <input id="student-edit-year-other" type="text" aria-label="Enter a new year" placeholder="Enter year" hidden>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="student-edit-section">Department Section</label>
+              <select id="student-edit-section" required></select>
+              <input id="student-edit-section-other" type="text" aria-label="Enter a new section" placeholder="Enter section" hidden>
+            </div>
+            <div class="form-group">
+              <label for="student-edit-email">Email</label>
+              <input id="student-edit-email" type="email">
+            </div>
+          </div>
+          <p class="muted student-location-edit-hint">Choose an existing value, or select “Other” to enter a new one.</p>
+          <div class="form-row">
+            <div class="form-group"><label for="student-edit-parent-name">Parent name</label><input id="student-edit-parent-name" type="text"></div>
+            <div class="form-group"><label for="student-edit-parent-phone">Parent phone</label><input id="student-edit-parent-phone" type="tel"></div>
+          </div>
+          <div class="form-group"><label for="student-edit-parent-email">Parent email</label><input id="student-edit-parent-email" type="email"></div>
+          <div class="form-row"><div class="form-group"><label for="student-edit-photo-file">Change photo</label><input id="student-edit-photo-file" type="file" accept="image/*"></div><div class="form-group"><button id="student-edit-recapture" class="btn" type="button">Re-capture face</button><p id="student-edit-face-message" class="muted" role="status"></p></div></div>
+          <p id="student-edit-message" class="alert-msg danger" hidden></p>
+          <div class="dialog-footer-actions">
+            <button type="button" class="btn" id="student-edit-cancel">Cancel</button>
+            <button type="submit" class="btn primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+      <div id="student-edit-drawer-backdrop" class="student-edit-drawer-backdrop" hidden></div>
+      <aside id="student-edit-drawer" class="student-edit-drawer" role="dialog" aria-modal="true" aria-labelledby="student-edit-drawer-title" hidden>
+        <div class="student-edit-drawer-head"><div><h3 id="student-edit-drawer-title">Edit student profile</h3><div id="student-edit-summary" class="student-edit-summary"></div></div><button id="student-edit-drawer-close" class="btn-xs" type="button" aria-label="Close student editor">Close</button></div>
+        <div class="student-edit-drawer-navigation"><button id="student-edit-previous" class="btn" type="button">← Previous</button><span id="student-edit-position" class="muted"></span><button id="student-edit-next" class="btn" type="button">Next →</button></div>
+        <div id="student-edit-panel-host"></div>
+      </aside>
+      <dialog id="student-bulk-move-dialog" class="custom-dialog sm"><div class="dialog-content"><button class="dialog-close-btn" id="student-bulk-move-close" type="button" aria-label="Close">&times;</button><div class="dialog-header"><h3>Move selected students</h3><p class="muted">Choose the destination department, year, and section.</p></div><div class="form-group"><label for="student-move-department">Department</label><select id="student-move-department"></select></div><div class="form-group"><label for="student-move-year">Year</label><select id="student-move-year"></select></div><div class="form-group"><label for="student-move-section">Section</label><select id="student-move-section"></select></div><div class="form-group"><label for="student-move-new-section">New section (optional)</label><input id="student-move-new-section" type="text" placeholder="e.g. CSE-24"></div><p id="student-move-preview" class="muted" aria-live="polite"></p><p id="student-move-error" class="alert-msg danger" hidden></p><div class="dialog-footer-actions"><button id="student-bulk-move-cancel" class="btn" type="button">Cancel</button><button id="student-bulk-move-apply" class="btn primary" type="button">Confirm move</button></div></div></dialog>
+      <dialog id="student-import-preview-dialog" class="custom-dialog"><div class="dialog-content student-import-preview-content"><button class="dialog-close-btn" id="student-import-preview-close" type="button" aria-label="Close">&times;</button><div class="dialog-header"><h3>Review CSV import</h3><p id="student-import-preview-summary" class="muted"></p></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Roll</th><th>Name</th><th>Department</th><th>Year</th><th>Section</th><th>Status</th></tr></thead><tbody id="student-import-preview-body"></tbody></table></div><p id="student-import-preview-error" class="alert-msg danger" hidden></p><div class="dialog-footer-actions"><button id="student-import-preview-cancel" class="btn" type="button">Cancel</button><button id="student-import-preview-confirm" class="btn primary" type="button">Import valid rows</button></div></div></dialog>
+      <input id="student-import-csv-file" type="file" accept=".csv,text/csv" hidden>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: SECTION STUDENT LIST -->
+    <!-- ---------------------------------------- -->
+    <section id="v-class-roster" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" id="roster-back" type="button" data-app-back>← Back</button>
+          <h2 id="roster-title">Section Student List</h2>
+          <p id="roster-meta" class="muted"></p>
+        </div>
+        <div class="header-actions">
+          <label id="roster-owner-field" hidden>Assigned faculty <select id="roster-owner-select"></select></label>
+          <button class="btn" id="roster-export-btn" type="button">Export Student List CSV</button>
+          <button class="btn primary" id="roster-take-attendance" type="button">⚡ Take Section Attendance</button>
+        </div>
+      </div>
+
+      <!-- ENROLL EXISTING OR NEW STUDENT PANEL -->
+      <div class="card roster-enrollment-card">
+        <div class="roster-enrollment-head">
+          <div>
+            <h3>Enroll Students in this Section</h3>
+            <p class="muted">Search the student directory and add students to this department section.</p>
+          </div>
+          <button class="btn btn-secondary" id="register-class-student" type="button">+ Register Student</button>
+        </div>
+
+        <form id="student-lookup" class="lookup-form">
+          <input id="class-student-query" type="search" placeholder="Search by name, roll number, or department..." required>
+          <button class="btn primary" type="submit">Search College Database</button>
+        </form>
+        <p id="lookup-msg" class="muted status-note" role="status" aria-live="polite"></p>
+        <div id="lookup-results" class="lookup-results"></div>
+      </div>
+
+      <!-- ENROLLED STUDENTS LIST -->
+      <div class="roster-students-container">
+        <div class="section-head">
+          <div>
+            <h3>Students (<span id="roster-count">0</span>)</h3>
+            <p class="muted">Select a student to view their profile and attendance. Edit details from Edit Student Profiles.</p>
+          </div>
+          <input id="roster-filter-input" type="search" placeholder="Filter enrolled students..." class="search-sm">
+        </div>
+        <div id="roster-students" class="student-report-grid"></div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: REGISTER STUDENT (BIOMETRIC CAPTURE) -->
+    <!-- ---------------------------------------- -->
+    <section id="v-register" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Student Biometric Enrollment</h2>
+          <p class="muted">Register a new student and enroll their facial biometric profile.</p>
+        </div>
+      </div>
+
+      <div class="card registration-card">
+        <div class="registration-steps" role="tablist" aria-label="Student registration steps">
+          <button class="registration-step active" id="registration-tab-1" type="button" role="tab" aria-selected="true" aria-controls="registration-panel-1">
+            <span class="registration-step-number">1</span><span><b>Student details</b><small>Academic & personal information</small></span>
+          </button>
+          <button class="registration-step" id="registration-tab-2" type="button" role="tab" aria-selected="false" aria-controls="registration-panel-2" disabled>
+            <span class="registration-step-number">2</span><span><b>Face capture</b><small>Record biometric angles</small></span>
+          </button>
+        </div>
+        <div class="registration-layout">
+          <!-- DETAILS FORM -->
+          <div class="student-fields-col registration-panel" id="registration-panel-1" role="tabpanel" aria-labelledby="registration-tab-1">
+            <h3 class="section-subhead">Academic & Personal Details</h3>
+            
+            <div class="form-group">
+              <label for="s-name">Full Student Name <span class="req">*</span></label>
+              <input id="s-name" type="text" placeholder="e.g. Vaishnavi Katiyar" required autocomplete="name">
+            </div>
+
+            <div class="form-group">
+              <label for="s-roll">University Roll Number <span class="req">*</span></label>
+              <input id="s-roll" type="text" placeholder="e.g. 2400320101218" required>
+            </div>
+
+            <div class="form-group">
+              <label for="s-admission">Admission Number</label>
+              <input id="s-admission" type="text" placeholder="Enter admission number (optional)">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="s-dept">Department</label>
+                <select id="s-dept">
+                  <option value="CSE">CSE (Computer Science)</option>
+                  <option value="IT">IT (Information Tech)</option>
+                  <option value="ECE">ECE (Electronics)</option>
+                  <option value="MECH">MECH (Mechanical)</option>
+                  <option value="CIVIL">CIVIL (Civil)</option>
+                  <option value="OTHER">Other</option>
+                </select>
+                <input id="s-dept-other" type="text" placeholder="Enter department name" aria-label="Other department name" hidden>
+              </div>
+
+              <div class="form-group">
+                <label for="s-year">Academic Year</label>
+                <select id="s-year">
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="3rd Year" selected>3rd Year</option>
+                  <option value="4th Year">4th Year</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+              <label for="s-sec">Department Section</label>
+                <select id="s-sec" required>
+                  <option value="">Select a registered department section</option>
+                  <option value="OTHER">Other (add a new section)</option>
+                </select>
+                <input id="s-sec-other" type="text" placeholder="Enter full name, e.g. ECE-D" aria-label="Other department section name" hidden>
+              </div>
+
+              <div class="form-group">
+                <label for="s-date">Enrollment Date</label>
+                <input id="s-date" type="date" disabled>
+              </div>
+            </div>
+
+            <h3 class="section-subhead">Parent / Guardian Details</h3>
+            <div class="form-group">
+              <label for="s-parent-name">Parent or Guardian Name</label>
+              <input id="s-parent-name" type="text" maxlength="100" placeholder="Enter parent or guardian name" autocomplete="name">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="s-parent-phone">Parent or Guardian Phone</label>
+                <input id="s-parent-phone" type="tel" maxlength="24" placeholder="e.g. +91 98765 43210" autocomplete="tel">
+              </div>
+              <div class="form-group">
+                <label for="s-parent-email">Parent or Guardian Email</label>
+                <input id="s-parent-email" type="email" maxlength="120" placeholder="e.g. parent@example.com" autocomplete="email">
+              </div>
+            </div>
+
+            <!-- PHOTO UPLOAD FALLBACK -->
+            <div class="photo-upload-fallback">
+              <label>Alternative: Upload Profile Photo</label>
+              <input type="file" id="s-photo-file" accept="image/*">
+              <small class="muted">If webcam is unavailable, you can upload a clear front-facing student photo.</small>
+              <div id="photo-upload-preview" class="photo-upload-preview" hidden>
+                <img id="profile-photo-preview" alt="Selected profile photo preview">
+                <div class="photo-upload-actions">
+                  <button class="btn btn-secondary" id="photo-crop-open" type="button">Preview &amp; Crop</button>
+                  <button class="btn" id="photo-clear" type="button">Remove Photo</button>
+                </div>
+                <small class="muted" id="photo-upload-status">Photo ready to use.</small>
+              </div>
+            </div>
+            <div class="registration-step-actions">
+              <button class="btn primary" id="registration-continue" type="button">Continue to Face Capture <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+
+          <!-- BIOMETRIC CAPTURE COLUMN -->
+          <div class="capture-column registration-panel" id="registration-panel-2" role="tabpanel" aria-labelledby="registration-tab-2" hidden>
+            <h3 class="section-subhead">Multi-Angle Facial Capture</h3>
+
+            <div class="capture-workspace">
+              <div class="camwrap reg-camwrap">
+                <video id="reg-video" class="cam" autoplay muted playsinline></video>
+                <div class="face-oval-guide"></div>
+                <div id="reg-cam-off" class="cam-off">Webcam is inactive</div>
+              </div>
+
+              <aside class="capture-tools" aria-label="Face capture controls">
+                <div class="capture-guide">
+                  <div class="guide-indicator">
+                    <span class="guide-step-tag">Step <span id="capture-step-num">1</span> of 5</span>
+                    <b id="capture-pose">Look straight into the camera.</b>
+                  </div>
+                  <span id="capture-count" class="count-pill">0 / 5 captures completed</span>
+                </div>
+
+                <div class="capture-thumbnails-grid" id="capture-thumbs">
+                  <div class="thumb-slot" data-pose="front"><span>1. Front</span></div>
+                  <div class="thumb-slot" data-pose="left"><span>2. Left</span></div>
+                  <div class="thumb-slot" data-pose="right"><span>3. Right</span></div>
+                  <div class="thumb-slot" data-pose="up"><span>4. Up</span></div>
+                  <div class="thumb-slot" data-pose="down"><span>5. Down</span></div>
+                </div>
+
+                <div class="capture-controls">
+                  <button class="btn" id="reg-cam" type="button">🎥 Start Camera</button>
+                  <button class="btn primary" id="reg-capture" type="button" disabled>📸 Capture Front Angle</button>
+                  <button class="btn" id="reg-reset" type="button" disabled>Retake All</button>
+                </div>
+
+                <p id="reg-msg" class="status-msg" role="status" aria-live="polite"></p>
+
+                <div class="submit-action-box">
+                  <button class="btn primary btn-lg btn-block" id="reg-save" type="button" disabled>Complete Biometric Registration</button>
+                  <button class="btn" id="registration-back" type="button">← Back to Student Details</button>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <dialog id="photo-crop-dialog" class="custom-dialog sm">
+      <div class="dialog-content photo-crop-content">
+        <button type="button" class="dialog-close-btn" id="photo-crop-close" aria-label="Close photo crop dialog">&times;</button>
+        <div class="dialog-header">
+          <h3>Preview &amp; Crop Photo</h3>
+          <p class="muted">Drag the photo to reposition it, then adjust the zoom.</p>
+        </div>
+        <div class="photo-crop-stage">
+          <canvas id="photo-crop-canvas" width="512" height="512" aria-label="Square profile photo crop preview"></canvas>
+        </div>
+        <label class="photo-zoom-control" for="photo-crop-zoom">Zoom <input id="photo-crop-zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+        <div class="dialog-footer-actions">
+          <button class="btn" id="photo-crop-reset" type="button">Reset Crop</button>
+          <button class="btn" id="photo-crop-cancel" type="button">Cancel</button>
+          <button class="btn primary" id="photo-crop-apply" type="button">Use Cropped Photo</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: TAKE ATTENDANCE SETUP -->
+    <!-- ---------------------------------------- -->
+    <section id="v-setup" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Take Lecture Attendance</h2>
+          <p class="muted">Choose a department section, then enter the details for this lecture.</p>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <div class="card setup-config-card">
+          <h3>Lecture Session Details</h3>
+          
+          <div class="form-group">
+            <label for="c-class-select">Select Department Section</label>
+            <select id="c-class-select" class="select-lg"></select>
+          </div>
+
+          <div class="form-group">
+            <label for="c-subject-select">Choose from Subjects</label>
+            <select id="c-subject-select"><option value="">Choose a subject (optional)</option></select>
+          </div>
+          <div class="form-group">
+            <label for="c-subject">Lecture Subject</label>
+            <input id="c-subject" type="text" placeholder="Type the subject for this lecture" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="c-date">Lecture Date</label>
+              <input id="c-date" type="date" required>
+            </div>
+
+            <div class="form-group">
+              <label for="c-slot">Lecture Hour / Slot</label>
+              <input id="c-slot" type="text" value="09:00 AM - 10:00 AM" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Attendance method</label>
+            <div class="radio-cards attendance-method-cards">
+              <label class="radio-card selected">
+                <input type="radio" name="att-mode" value="camera" checked>
+                <div>
+                  <b>Camera Check-in</b>
+                  <p class="muted">Students step up to the camera. You’ll be asked before camera access starts.</p>
+                </div>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="att-mode" value="manual">
+                <div>
+                  <b>Manual Roll Call</b>
+                  <p class="muted">Mark each student from the class register.</p>
+                </div>
+              </label>
+            </div>
+            <p class="muted camera-mode-note" id="camera-mode-note" hidden>Face matching is unavailable in demo mode. Connect the recognition service to verify students with the camera.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="c-room">Lecture Hall / Lab</label>
+            <input id="c-room" type="text" value="Room 304 / Lab 3" required>
+          </div>
+          <div class="form-row"><label>Match confidence <input id="c-confidence" type="range" min="0.5" max="0.99" step="0.01"></label><label>Late after (minutes) <input id="c-late-minutes" type="number" min="0" max="180" step="1"></label></div>
+          <div class="form-group"><label for="c-session-notes">Session notes</label><textarea id="c-session-notes" rows="3" maxlength="500"></textarea></div>
+
+          <div class="setup-actions">
+            <button class="btn primary btn-lg btn-block" id="c-go" type="button">🚀 Launch Attendance Session</button>
+          </div>
+          <p id="c-msg" class="status-msg" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="card setup-preview-card">
+          <h3>Section Students</h3>
+          <p class="muted" id="setup-roster-count">Select a class to preview roster</p>
+          <div id="setup-roster-list" class="setup-student-preview-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: LIVE ATTENDANCE SESSION -->
+    <!-- ---------------------------------------- -->
+    <section id="v-live" class="view">
+      <div class="page-header live-session-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <div class="live-status-pill">
+            <span class="dot live-pulse"></span>
+            <span>ACTIVE ATTENDANCE SESSION</span>
+          </div>
+          <h2 id="live-title">Data Structures & Algorithms</h2>
+          <p class="muted" id="live-sub">CSE-21 · Room 304 · Session started</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn danger btn-lg" id="end-btn" type="button">🏁 Finish & Save Register</button>
+        </div>
+      </div>
+
+      <div class="live-grid">
+        <!-- SCANNER COLUMN -->
+        <div class="scanner-column" id="live-scanner-column">
+          <div class="camwrap live-camwrap">
+            <video id="live-video" class="cam" autoplay muted playsinline></video>
+            
+            <!-- SCANNER OVERLAY -->
+            <div class="scanner-overlay" id="scanner-overlay">
+              <div class="scanner-reticle">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+              </div>
+              <div class="scanner-laser"></div>
+            </div>
+
+            <div id="cam-off" class="cam-off">
+              <div class="cam-off-box">
+                <span class="icon">📷</span>
+                <b>Camera is turned off</b>
+                <p>Start the camera for recognition, or mark attendance from the class register.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="scanner-action-bar">
+            <button class="btn primary" id="cam-toggle" type="button">🎥 Start Camera</button>
+            <button class="btn-icon" id="audio-toggle" title="Toggle Sound Chime" type="button">🔊</button>
+            <button class="btn-icon" id="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode" type="button">◐</button>
+          </div>
+
+          <!-- LATEST RECOGNITION CARD -->
+          <div id="result" class="result-banner">
+            <div class="result-initial">
+              <span class="icon">🔍</span>
+              <div>
+                <b>Face Recognition Engine Active</b>
+                <p class="muted">Position student face inside frame, or use manual quick-mark.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROSTER CHECKLIST COLUMN -->
+        <div class="card roster-column">
+          <div class="roster-head">
+            <div>
+              <h3>Class Register</h3>
+              <p class="muted" id="count">0 Present · 0 Absent</p>
+            </div>
+            <div class="roster-bulk-tools">
+              <button class="btn-xs" id="mark-all-btn" type="button">Mark All</button>
+              <button class="btn-xs" id="clear-all-btn" type="button">Clear All</button>
+            </div>
+          </div>
+
+          <!-- PROGRESS BAR TOWARD MINIMUM ATTENDANCE -->
+          <div class="attendance-progress-wrap">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="live-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text-row">
+              <span id="live-progress-text">0% Attendance</span>
+              <span class="muted">Target: <span data-min-limit>75</span>%</span>
+            </div>
+          </div>
+
+          <input id="live-search-input" type="search" placeholder="Quick find student..." class="search-sm">
+
+          <div id="live-list" class="live-student-checklist"></div>
+          
+          <div class="live-footer-note">
+            <small class="muted" id="unknown-note">Click any student to toggle Present / Absent manually.</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: ATTENDANCE HISTORY -->
+    <!-- ---------------------------------------- -->
+    <section id="v-history" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Attendance Session History</h2>
+          <p class="muted">Comprehensive audit logs of all conducted lecture sessions.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn" id="history-export-csv" type="button">Export History CSV</button>
+        </div>
+      </div>
+
+      <div class="card history-card">
+        <div class="history-filter-bar">
+          <input id="history-search-input" type="search" placeholder="Search by subject, section, or date..." class="search-sm">
+          <select id="history-class-filter" class="select-sm">
+            <option value="all">All Sections</option>
+          </select>
+          <select id="history-semester-filter" class="select-sm"><option value="all">All semesters</option></select>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="hist-table">
+            <thead>
+              <tr>
+                <th>Date & Time</th>
+                <th>Lecture Subject</th>
+                <th>Department Section</th>
+                <th>Room</th>
+                <th>Total Enrolled</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Attendance %</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="hist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------- -->
+    <!-- VIEW: REPORTS & DEFAULTER ANALYSIS -->
+    <!-- ---------------------------------------- -->
+    <section id="v-reports" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Academic Attendance Reports & Defaulters</h2>
+          <p class="muted">University <span data-min-limit>75</span>% eligibility compliance, defaulter notices, and student ledgers.</p>
+        </div>
+        <div class="header-actions">
+          <span class="badge ok">Minimum attendance: <span data-min-limit>75</span>%</span>
+          <button class="btn" id="print-report-btn" type="button">🖨️ Print Attendance Register</button>
+          <button class="btn primary" id="csv-btn" type="button">📥 Export CSV Sheet</button>
+        </div>
+      </div>
+
+      <!-- 1. CHOOSE CLASS -->
+      <div class="card class-selector-card">
+        <h3 class="section-title">1. Select Department Section</h3>
+        <p class="muted">View attendance across the selected section’s student list.</p>
+        <div id="report-filter-chips" class="report-filter-chips" aria-label="Department and year filters"></div>
+        <div class="form-row report-academic-filters">
+          <label>Department <select id="report-department-filter"><option value="">All departments</option></select></label>
+          <label>Year <select id="report-year-filter"><option value="">All years</option></select></label>
+          <label>Subject <select id="report-subject-filter"><option value="">All subjects</option></select></label>
+          <label>Semester <select id="report-semester-filter"><option value="all">All semesters</option></select></label>
+          <button id="report-department-view" class="btn btn-secondary" type="button">Whole department view</button>
+        </div>
+        <div id="report-department-summary" class="report-department-summary"></div>
+        <div id="rep-classes" class="report-class-grid"></div>
+      </div>
+
+      <!-- 2. CUMULATIVE CLASS SUMMARY & METRICS -->
+      <div id="rep-detail" class="rep-detail-container" hidden>
+        <div class="print-only" id="report-print-header"><b>FaceAuth</b><p>Department: — · Date range: All records</p><div class="print-signature">HOD Signature: ______________________________</div></div>
+        <div class="card report-summary-card">
+          <div class="report-summary-head">
+            <div>
+              <span class="report-badge" id="rep-dept-badge">CSE Department</span>
+              <h2 id="rep-class-title">Data Structures & Algorithms</h2>
+              <p id="rep-class-note" class="muted">Cumulative semester records</p>
+            </div>
+            <div class="class-attendance-gauge">
+              <div class="gauge-number" id="rep-avg-percent">0%</div>
+              <span class="muted">Class Average</span>
+            </div>
+          </div>
+
+          <!-- SUMMARY TILES -->
+          <div class="report-metrics-row" id="rep-metrics-row"></div>
+        </div>
+
+        <!-- 3. STUDENT LEDGER & DEFAULTER LIST -->
+        <div class="card student-ledger-card">
+          <div class="ledger-header">
+            <div class="ledger-tabs" id="report-filter-tabs">
+              <button class="tab-btn active" data-filter="all">All Enrolled (<span id="count-all">0</span>)</button>
+              <button class="tab-btn danger-tab" data-filter="defaulters">⚠️ Defaulters (&lt;<span data-min-limit>75</span>%) (<span id="count-defaulters">0</span>)</button>
+              <button class="tab-btn critical-tab" data-filter="critical">🚨 Critical (&lt;<span data-warning-limit>65</span>%) (<span id="count-critical">0</span>)</button>
+              <button class="tab-btn ok-tab" data-filter="eligible">✅ Eligible (&ge;<span data-min-limit>75</span>%) (<span id="count-eligible">0</span>)</button>
+            </div>
+            <input id="rep-search" class="search-sm" type="search" placeholder="Search by roll number or student name...">
+          </div>
+          <div class="report-filter-tools">
+            <button id="rep-filter-toggle" class="btn btn-secondary" type="button" aria-expanded="false" aria-controls="rep-filter-panel">Filter by attendance %</button>
+            <div id="rep-filter-panel" class="report-filter-panel" hidden>
+              <label>From <input id="rep-filter-min" type="number" min="0" max="100" placeholder="0">%</label>
+              <label>To <input id="rep-filter-max" type="number" min="0" max="100" placeholder="100">%</label>
+              <button id="rep-filter-apply" class="btn primary" type="button">Apply Filter</button>
+              <button id="rep-filter-clear" class="btn" type="button">Clear</button>
+            </div>
+            <p id="rep-filter-message" class="status-msg" role="status" hidden></p>
+          </div>
+
+        <div id="rep-body" class="student-report-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="v-settings" class="view">
+      <div class="page-header">
+        <div>
+          <button class="btn-back page-back" type="button" data-app-back>← Back</button>
+          <h2>Attendance Settings</h2>
+          <p class="muted">Set the minimum attendance requirement and warning band.</p>
+        </div>
+      </div>
+      <div class="card attendance-settings-card">
+        <form id="attendance-settings-form" novalidate>
+          <div class="form-group"><label><input id="settings-auto-switch-term" type="checkbox" checked> Auto-switch semester by date</label><small class="muted">Use the term whose date range includes today as the active term.</small></div>
+          <div class="form-row"><label>Default odd semester <select id="settings-default-odd"><option value="1">1</option><option value="3">3</option><option value="5">5</option><option value="7">7</option></select></label><label>Default even semester <select id="settings-default-even"><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option></select></label></div>
+          <div class="form-group">
+            <label for="settings-min-number">Minimum attendance required (%)</label>
+            <div class="settings-limit-inputs">
+              <input id="settings-min-number" type="number" min="40" max="100" step="1" required>
+              <input id="settings-min-slider" type="range" min="40" max="100" step="1" aria-label="Minimum attendance slider">
+            </div>
+            <div class="settings-presets" aria-label="Quick attendance presets">
+              <span class="muted">Quick presets:</span>
+              <button type="button" class="btn-xs" data-setting-preset="65">65%</button>
+              <button type="button" class="btn-xs" data-setting-preset="70">70%</button>
+              <button type="button" class="btn-xs" data-setting-preset="75">75%</button>
+              <button type="button" class="btn-xs" data-setting-preset="80">80%</button>
+              <button type="button" class="btn-xs" data-setting-preset="85">85%</button>
+            </div>
+          </div>
+          <div class="form-group settings-warning-field">
+            <label for="settings-warning-number">Warning band starts below (%)</label>
+            <input id="settings-warning-number" type="number" min="0" max="99" step="1" required>
+            <small class="muted">Must be lower than the minimum attendance requirement.</small>
+          </div>
+          <div class="settings-preview-box" aria-live="polite">
+            <b>Live preview</b>
+            <p id="settings-preview-text" class="muted"></p>
+          </div>
+          <p id="settings-message" class="alert-msg danger" hidden></p>
+          <div class="settings-actions">
+            <button id="settings-reset-default" type="button" class="btn">Reset to 75%</button>
+            <button id="settings-save" type="submit" class="btn primary">Save Settings</button>
+          </div>
+        </form>
+      </div>
+      <div class="card term-management-card"><h3>Semester management</h3><div class="form-row"><label>Academic year <input id="term-academic-year" placeholder="2026 - 2027"></label><label>Semester <select id="term-semester"><option value="1">Semester 1</option><option value="2">Semester 2</option><option value="3">Semester 3</option><option value="4">Semester 4</option><option value="5">Semester 5</option><option value="6">Semester 6</option><option value="7">Semester 7</option><option value="8">Semester 8</option></select></label><label>Start date <input id="term-start-date" type="date"></label><label>End date <input id="term-end-date" type="date"></label><button id="term-create" class="btn" type="button">Create term</button></div><div id="term-list"></div></div>
+      <div class="card data-safety-tools">
+        <h3>Backup and academic year-end</h3>
+        <div class="settings-actions"><button id="backup-download" class="btn" type="button">Download all data</button><label class="btn btn-secondary" for="backup-file">Import backup</label><input id="backup-file" type="file" accept="application/json" hidden></div>
+        <label>Storage use <progress id="storage-usage" max="100" value="0"></progress><span id="storage-usage-label" class="muted">Estimating…</span></label>
+        <hr>
+        <div class="form-row"><label>Department <select id="promotion-department"></select></label><button id="promotion-preview" class="btn" type="button">Preview promotion</button><button id="promotion-apply" class="btn primary" type="button" disabled>Promote students</button></div>
+        <div id="promotion-preview-output" class="muted" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section id="v-subjects" class="view">
+      <div class="page-header"><div><button class="btn-back page-back" type="button" data-app-back>← Back</button><h2>Subjects</h2><p class="muted">Maintain the subject list available for attendance sessions.</p></div></div>
+      <div class="card">
+        <form id="subject-form" class="form-row" novalidate>
+          <input id="subject-id" type="hidden">
+          <div class="form-group"><label for="subject-code">Subject code</label><input id="subject-code" required maxlength="24"></div>
+          <div class="form-group"><label for="subject-name">Subject name</label><input id="subject-name" required maxlength="100"></div>
+          <div class="form-group"><label for="subject-department">Department</label><select id="subject-department" required></select><input id="subject-department-other" type="text" maxlength="60" placeholder="Enter department name (e.g. MBA)" aria-label="Enter another department" hidden></div>
+          <div class="form-group"><label for="subject-year">Year</label><select id="subject-year" required></select></div>
+          <div class="form-group"><label for="subject-semester">Semester</label><select id="subject-semester"><option value="1">Semester 1</option><option value="2">Semester 2</option><option value="3">Semester 3</option><option value="4">Semester 4</option><option value="5">Semester 5</option><option value="6">Semester 6</option><option value="7">Semester 7</option><option value="8">Semester 8</option></select></div>
+          <div class="form-group"><label for="subject-credits">Credits</label><input id="subject-credits" type="number" min="0" max="20" step="1"></div>
+          <div class="form-group"><button id="subject-save" class="btn primary" type="submit">Add Subject</button> <button id="subject-cancel" class="btn" type="button" hidden>Cancel edit</button></div>
+        </form>
+      </div>
+      <div id="subject-list" class="card" aria-live="polite"></div>
+    </section>
+
+    <section id="v-audit-log" class="view">
+      <div class="page-header"><div><button class="btn-back page-back" type="button" data-app-back>← Back</button><h2>Attendance Audit Log</h2><p class="muted">Review manual changes to saved attendance.</p></div></div>
+      <div class="card" id="audit-log-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ========================================== -->
+<!-- 3. MODALS & DIALOGS -->
+<!-- ========================================== -->
+
+<!-- STUDENT PROFILE & ATTENDANCE HISTORY MODAL -->
+<dialog id="student-dialog" class="custom-dialog student-profile-dialog">
+  <div class="dialog-content">
+    <button type="button" class="dialog-close-btn" id="student-dialog-close" aria-label="Close dialog">&times;</button>
+    
+    <div class="student-profile-header">
+      <div class="student-photo-wrapper">
+        <img id="student-dialog-photo" class="student-large-photo" alt="Student photo" hidden>
+        <div id="student-dialog-initials" class="student-large-photo initials-avatar">VK</div>
+      </div>
+      <div class="student-profile-title">
+        <span class="student-tag" id="student-dialog-status-badge">Eligible</span>
+        <h2 id="student-dialog-name">Vaishnavi Katiyar</h2>
+        <p class="muted" id="student-dialog-roll">Roll: 2400320101218</p>
+      </div>
+    </div>
+
+    <!-- PROFILE VIEW MODE -->
+    <div id="student-view-mode">
+      <div class="profile-details-grid">
+        <div class="detail-cell">
+          <span class="muted">Admission Number</span>
+          <b id="student-dialog-admission">Not provided</b>
+        </div>
+        <div class="detail-cell">
+          <span class="muted">Department</span>
+          <b id="student-dialog-department">CSE</b>
+        </div>
+        <div class="detail-cell">
+          <span class="muted">Academic Year</span>
+          <b id="student-dialog-year">3rd Year</b>
+        </div>
+        <div class="detail-cell">
+          <span class="muted">Department Section</span>
+          <b id="student-dialog-section">—</b>
+        </div>
+        <div class="detail-cell">
+          <span class="muted">University Email</span>
+          <b id="student-dialog-email">student@college.edu</b>
+        </div>
+        <div class="detail-cell">
+          <span class="muted">Registered On</span>
+          <b id="student-dialog-date">10 Oct 2026</b>
+        </div>
+        <div class="detail-cell highlight">
+          <span class="muted">Overall Attendance</span>
+          <b id="student-dialog-attendance">10 / 12 (83%)</b>
+        </div>
+        <div class="detail-cell highlight" id="student-dialog-buffer-wrap">
+          <span class="muted">Attendance buffer</span>
+          <b id="student-dialog-buffer">No data yet</b>
+        </div>
+        <div class="detail-cell"><span>Schedule risk projection</span><b id="student-dialog-risk">No schedule projection available</b></div>
+      </div>
+
+      <section class="student-what-if card" aria-labelledby="student-what-if-title">
+        <h4 id="student-what-if-title">What-if attendance</h4>
+        <p class="muted">Preview upcoming lectures without changing attendance records.</p>
+        <div class="student-what-if-fields">
+          <label>Lectures to attend <input id="student-what-if-attend" type="number" min="0" step="1" value="0"></label>
+          <label>Lectures to miss <input id="student-what-if-miss" type="number" min="0" step="1" value="0"></label>
+        </div>
+        <p id="student-what-if-result" class="muted" aria-live="polite">No data yet</p>
+      </section>
+
+      <div class="dialog-section-divider"></div>
+      
+      <div class="student-session-history-section">
+        <h4>Lecture-by-Lecture Attendance Log</h4>
+        <div id="student-dialog-history-list" class="student-session-history-list"></div>
+      </div>
+
+      <div class="dialog-footer-actions">
+        <button type="button" class="btn danger-outline" id="student-dialog-delete">Remove Student</button>
+        <div class="btn-group-right">
+          <button type="button" class="btn primary" id="student-dialog-done">Close</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</dialog>
+
+<dialog id="edit-face-dialog" class="custom-dialog sm"><div class="dialog-content"><button id="edit-face-close" class="dialog-close-btn" type="button" aria-label="Close">&times;</button><div class="dialog-header"><h3>Re-capture face</h3><p id="edit-face-pose" class="muted">Start the camera and follow each of the five poses.</p></div><video id="edit-face-video" autoplay muted playsinline class="cam"></video><p id="edit-face-count" class="muted">0 / 5 captures</p><div class="dialog-footer-actions"><button id="edit-face-camera" class="btn" type="button">Start camera</button><button id="edit-face-capture" class="btn" type="button" disabled>Capture pose</button><button id="edit-face-save" class="btn primary" type="button" disabled>Save captures</button></div></div></dialog>
+
+<!-- SESSION DRILLDOWN AUDIT MODAL -->
+<dialog id="session-modal" class="custom-dialog session-audit-dialog">
+  <div class="dialog-content">
+    <button type="button" class="dialog-close-btn" id="sess-modal-close" aria-label="Close dialog">&times;</button>
+    <div class="dialog-header">
+      <span class="badge ok">Attendance Register</span>
+      <h2 id="sess-modal-title">Data Structures & Algorithms</h2>
+      <p class="muted" id="sess-modal-meta">10 Oct 2026 · CSE-21 · Room 304</p>
+    </div>
+
+    <div class="sess-audit-stats" id="sess-modal-stats"></div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Roll Number</th>
+            <th>Status</th>
+            <th>Method</th>
+            <th>Time Recorded</th>
+            <th>Change Status</th>
+          </tr>
+        </thead>
+        <tbody id="sess-modal-body"></tbody>
+      </table>
+    </div>
+
+    <div class="dialog-footer-actions">
+      <button class="btn danger-outline" id="sess-modal-delete" type="button">Delete Session Record</button>
+      <button class="btn primary" id="sess-modal-done" type="button">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- ADD / CREATE CLASS MODAL -->
+<dialog id="class-modal" class="custom-dialog">
+  <div class="dialog-content">
+    <button type="button" class="dialog-close-btn" id="class-modal-close" aria-label="Close dialog">&times;</button>
+    <div class="dialog-header">
+      <h3>Add a Department Section</h3>
+      <p class="muted">Create a section to manage its student list. Enter lecture subjects when attendance is taken.</p>
+    </div>
+
+    <form id="class-create-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="c-dept">Department</label>
+          <input id="c-dept" type="text" placeholder="e.g. CSE or ECE" required maxlength="80">
+        </div>
+        <div class="form-group">
+          <label for="c-year">Year</label>
+          <select id="c-year" required>
+            <option value="">Select academic year</option>
+            <option value="1st Year">1st Year</option>
+            <option value="2nd Year">2nd Year</option>
+            <option value="3rd Year">3rd Year</option>
+            <option value="4th Year">4th Year</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="c-sec">Section name</label>
+          <input id="c-sec" type="text" placeholder="e.g. 21 for CSE-21 or A for ECE-A" required>
+        </div>
+        <div class="form-group" id="class-owner-field"><label for="c-owner">Assigned faculty</label><select id="c-owner"></select></div>
+      </div>
+
+      <p id="c-create-msg" class="alert-msg danger" hidden></p>
+
+      <div class="dialog-footer-actions">
+        <button type="button" class="btn" id="class-modal-cancel">Cancel</button>
+        <button type="submit" class="btn primary">Create Section</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- CLASS SCHEDULE EDITOR -->
+<dialog id="schedule-modal" class="custom-dialog sm">
+  <div class="dialog-content">
+    <button type="button" class="dialog-close-btn" id="schedule-modal-close" aria-label="Close dialog">&times;</button>
+    <div class="dialog-header">
+      <h3>Schedule a Section</h3>
+      <p class="muted">Choose when this section meets. Removing its schedule won’t delete the section or student list.</p>
+    </div>
+    <form id="schedule-form">
+      <div class="form-group">
+        <label for="schedule-class-select">Department Section</label>
+        <select id="schedule-class-select" required></select>
+      </div>
+      <div class="form-group">
+        <label>Days</label>
+        <div class="schedule-days-picker">
+          <label><input type="checkbox" name="schedule-day" value="Mon"> Mon</label>
+          <label><input type="checkbox" name="schedule-day" value="Tue"> Tue</label>
+          <label><input type="checkbox" name="schedule-day" value="Wed"> Wed</label>
+          <label><input type="checkbox" name="schedule-day" value="Thu"> Thu</label>
+          <label><input type="checkbox" name="schedule-day" value="Fri"> Fri</label>
+          <label><input type="checkbox" name="schedule-day" value="Sat"> Sat</label>
+          <label><input type="checkbox" name="schedule-day" value="Sun"> Sun</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="schedule-time">Lecture Time</label>
+          <input id="schedule-time" type="text" placeholder="e.g. 09:00 AM - 10:00 AM" required>
+        </div>
+        <div class="form-group">
+          <label for="schedule-room">Classroom</label>
+          <input id="schedule-room" type="text" placeholder="e.g. Room 204" required>
+        </div>
+      </div>
+      <p id="schedule-msg" class="alert-msg danger" hidden></p>
+      <div class="dialog-footer-actions">
+        <button class="btn danger-outline" id="remove-class-schedule" type="button">Remove Schedule</button>
+        <button class="btn" id="schedule-cancel" type="button">Cancel</button>
+        <button class="btn primary" type="submit">Save Schedule</button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<!-- END SESSION CONFIRMATION DIALOG -->
+<dialog id="audit-reason-dialog" class="custom-dialog sm"><div class="dialog-content"><div class="dialog-header"><h3>Reason for attendance change</h3><p class="muted">This reason will be recorded in the audit log.</p></div><label for="audit-reason-input">Reason</label><textarea id="audit-reason-input" required maxlength="300"></textarea><div class="dialog-footer-actions"><button id="audit-reason-cancel" class="btn" type="button">Cancel</button><button id="audit-reason-save" class="btn primary" type="button">Continue</button></div></div></dialog>
+<dialog id="faculty-details-dialog" class="custom-dialog"><form id="faculty-details-form" class="dialog-content"><button class="dialog-close-btn" id="faculty-details-close" type="button" aria-label="Close">&times;</button><div class="dialog-header"><h3 id="faculty-details-title">Faculty details</h3><p id="faculty-details-role" class="muted"></p></div><input id="faculty-details-old-id" type="hidden"><div class="form-group"><label for="faculty-details-id">Teacher ID</label><input id="faculty-details-id" required maxlength="40" autocomplete="off"></div><div class="form-group"><label for="faculty-details-email">Email</label><input id="faculty-details-email" type="email" readonly></div><div class="form-group"><label for="faculty-details-name">Name</label><input id="faculty-details-name" readonly></div><div class="form-group"><label for="faculty-details-department">Department</label><input id="faculty-details-department" readonly></div><h4>Teaching assignments</h4><div class="table-responsive"><table class="data-table"><thead><tr><th>Class</th><th>Subject</th><th>Term</th><th>Teacher</th></tr></thead><tbody id="faculty-details-assignments"></tbody></table></div><div class="dialog-footer-actions"><button id="faculty-add-assignment" class="btn" type="button">Add teaching assignment</button><button id="faculty-details-cancel" class="btn" type="button">Cancel</button><button class="btn primary" type="submit">Save Teacher ID</button></div></form></dialog>
+<dialog id="faculty-assignment-dialog" class="custom-dialog sm"><form id="faculty-assignment-form" class="dialog-content"><button id="faculty-assignment-close" class="dialog-close-btn" type="button" aria-label="Close">&times;</button><div class="dialog-header"><h3>Add teaching assignment</h3><p id="faculty-assignment-teacher" class="muted"></p></div><div class="form-group"><label for="faculty-assignment-year">Year</label><select id="faculty-assignment-year" required><option value="">Select academic year</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></div><div class="form-group"><label for="faculty-assignment-section">Section</label><input id="faculty-assignment-section" required placeholder="e.g. 21 for CSE-21"></div><div class="form-group"><label for="faculty-assignment-subject">Subject</label><select id="faculty-assignment-subject" required><option value="">Select a subject</option></select></div><p id="faculty-assignment-error" class="alert-msg danger" hidden></p><div class="dialog-footer-actions"><button id="faculty-assignment-cancel" class="btn" type="button">Cancel</button><button class="btn primary" type="submit">Add assignment</button></div></form></dialog>
+<dialog id="end-session-modal" class="custom-dialog sm">
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h3>End Attendance Session?</h3>
+      <p id="end-session-desc" class="muted">Verify your attendance count before saving to university records.</p>
+    </div>
+    <div class="end-session-summary-box" id="end-session-stats"></div>
+    <div id="end-session-extra" class="muted"></div>
+    <div class="dialog-footer-actions">
+      <button class="btn" id="end-session-cancel" type="button">Return to Session</button>
+      <button class="btn primary" id="end-session-confirm" type="button">Save Attendance Register</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- CAMERA ACCESS CONSENT -->
+<dialog id="camera-consent-dialog" class="custom-dialog sm" aria-labelledby="camera-consent-title">
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h3 id="camera-consent-title">Allow camera access?</h3>
+      <p class="muted">The camera will open for student face capture or attendance check-in. Your browser will ask for camera permission next. You can cancel and use manual attendance instead.</p>
+    </div>
+    <div class="dialog-footer-actions">
+      <button type="button" class="btn" id="camera-consent-cancel">Cancel</button>
+      <button type="button" class="btn primary" id="camera-consent-allow">Continue</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="false" hidden></div>
+
+<!-- SCRIPTS -->
+<script src="data.js"></script>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+</script>
+</body>
+</html>
