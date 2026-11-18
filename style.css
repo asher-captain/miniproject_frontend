@@ -2657,3 +2657,23 @@ body.dark-theme .student-directory-year-group > summary { background: var(--surf
 .dash-defaulter-top button { border: 0; padding: 0; background: none; color: var(--emerald-800); text-decoration: underline; cursor: pointer; }
 @media print { body:has(#v-defaulters.active) #v-defaulters .page-header, body:has(#v-defaulters.active) .defaulters-filters { display: none !important; } body:has(#v-defaulters.active) #v-defaulters { display: block !important; } body:has(#v-defaulters.active) .defaulters-table-wrap { overflow: visible; } body:has(#v-defaulters.active) .defaulters-table { min-width: 0; font-size: 8pt; } body:has(#v-defaulters.active) .defaulters-table td, body:has(#v-defaulters.active) .defaulters-table th { padding: .25rem; } }
 
+
+/* Password visibility controls */
+.password-input-wrap { position: relative; }
+.password-input-wrap input { padding-right: 4.5rem; }
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  padding: 0.25rem 0.35rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--emerald-800);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.password-toggle:focus-visible { outline: 2px solid var(--emerald-600); outline-offset: 2px; }

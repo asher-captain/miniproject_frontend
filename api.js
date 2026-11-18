@@ -642,7 +642,7 @@ const FaceAPI = {
   async updateSessionRecord(sessionId, studentId, newStatus) {
     const session = DB.history.find(h => String(h.id) === String(sessionId));
     if (!session) return { ok: false, error: 'Session not found.' };
-    if (typeof getMyClasses === 'function' && !getMyClasses().some(cls => String(cls.id) === String(session.classId))) return { ok: false, error: 'You do not have access to this attendance session.' };
+    if (typeof canManageSession === 'function' ? !canManageSession(session) : typeof getMyClasses === 'function' && !getMyClasses().some(cls => String(cls.id) === String(session.classId))) return { ok: false, error: 'You can edit attendance only for your assigned subjects.' };
     const previous = JSON.parse(JSON.stringify(session));
 
     const sId = String(studentId);
@@ -672,7 +672,7 @@ const FaceAPI = {
   async deleteSession(sessionId) {
     if (typeof getMyClasses === 'function') {
       const target = DB.history.find(session => String(session.id) === String(sessionId));
-      if (!target || !getMyClasses().some(cls => String(cls.id) === String(target.classId))) return { ok: false, error: 'You do not have access to this attendance session.' };
+      if (!target || (typeof canManageSession === 'function' ? !canManageSession(target) : !getMyClasses().some(cls => String(cls.id) === String(target.classId)))) return { ok: false, error: 'You can manage only attendance for your assigned subjects.' };
     }
     const previous = DB.history;
     DB.history = DB.history.filter(h => String(h.id) !== String(sessionId));

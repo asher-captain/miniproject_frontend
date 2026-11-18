@@ -148,6 +148,7 @@ function toast(message, tone = 'ok') {
 // View Routing
 function show(viewName, { recordHistory = true } = {}) {
   if (viewName === 'faculty' && !isFacultyHod()) { toast('Faculty role management is available to HOD accounts.', 'warn'); viewName = 'dashboard'; }
+  if (viewName === 'settings' && !isFacultyHod()) { toast('College settings are available to HOD accounts.', 'warn'); viewName = 'dashboard'; }
   if (['register', 'student-edit'].includes(viewName) && !isFacultyHod()) { toast('Student profile management is available to HOD accounts.', 'warn'); viewName = 'students'; }
   const currentView = $$('.view.active').find(view => view.id.startsWith('v-') && view.id !== 'v-login');
   const currentName = currentView?.id.slice(2);
@@ -331,6 +332,7 @@ async function enterFacultyPortal(teacher) {
   $('#t-name').textContent = teacher.name;
   $('#t-role').textContent = `${teacher.designation || 'Faculty'} · ${teacher.department || 'CSE'}`;
   $('#faculty-nav').hidden = !isFacultyHod(teacher);
+  $('#settings-nav').hidden = !isFacultyHod(teacher);
   $('#hod-subject-summary').hidden = !isFacultyHod(teacher);
   const initials = teacher.name.split(/\s+/).map(n => n[0]).slice(0, 2).join('').toUpperCase();
   $('#t-avatar').textContent = initials || 'TC';
@@ -385,6 +387,9 @@ async function executeFacultyLogin(id, password) {
     return;
   }
 
+  $('#signup-form').reset();
+  $('#signup-box').hidden = true;
+  $('#login-box').hidden = false;
   await enterFacultyPortal(res.teacher);
 }
 
@@ -517,6 +522,9 @@ $('#signup-form').onsubmit = async e => {
   $('#su-id-card').value = '';
   $('#su-id-card-preview').hidden = true;
   $('#su-id-card-image').removeAttribute('src');
+  $('#signup-form').reset();
+  $('#signup-box').hidden = true;
+  $('#login-box').hidden = false;
   await enterFacultyPortal(res.teacher);
 };
 
@@ -530,6 +538,10 @@ $('#logout').onclick = async () => {
   selectedClassForReport = null;
   if (studentDirectoryState?.selected) studentDirectoryState.selected.clear();
   currentTeacher = null;
+  $('#signup-form').reset();
+  $('#signup-box').hidden = true;
+  $('#login-box').hidden = false;
+  $('#l-pw').value = '';
   $('#shell').hidden = true;
   $('#v-login').classList.add('active');
   toast('Signed out successfully');
@@ -686,57 +698,60 @@ function renderGlobalTermSelector() {
 }
 function localDateIso(date = new Date()) { return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
 
+function getSchedulableClasses() {
+  const teacher = DB.teacher || currentTeacher;
+  if (!teacher?.id) return [];
+  return getTermClasses().filter(cls =>
+    String(cls.teacherId || '') === String(teacher.id) &&
+    Boolean(cls.subjectId || cls.subject || cls.code)
+  );
+}
+
 function renderTodaySchedule() {
   const container = $('#today-classes');
   const scheduleButton = $('#schedule-class-btn');
-  if (scheduleButton) scheduleButton.disabled = !getTermClasses().length;
-  const assignments = getTermClasses();
+  const assignments = getSchedulableClasses();
+  if (scheduleButton) scheduleButton.disabled = !assignments.length;
   if (!assignments.length) {
-    container.innerHTML = `<p class="muted">No sections yet. Add a department section, then schedule its lecture days and time.</p>`;
+    container.innerHTML = '<p class="muted">No assigned subjects are available to schedule.</p>';
     return;
   }
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const todayShort = dayNames[new Date().getDay()];
-  const todayLong = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
   const dayBadge = $('#today-day-badge');
-  if (dayBadge) dayBadge.textContent = `${todayLong} Timetable`;
-
-  const scheduledToday = assignments.filter(cls => (cls.days || []).includes(todayShort));
-  if (!scheduledToday.length) {
-    container.innerHTML = `<p class="muted">No lectures scheduled for today. Use “Schedule Section” to add one.</p>`;
+  if (dayBadge) dayBadge.textContent = 'Weekly Timetable';
+  const scheduledClasses = assignments.filter(cls => Array.isArray(cls.days) && cls.days.length);
+  if (!scheduledClasses.length) {
+    container.innerHTML = '<p class="muted">No subjects are scheduled yet. Use “Schedule Section” to add a time.</p>';
     return;
   }
 
-  container.innerHTML = scheduledToday.map(cls => {
+  container.innerHTML = scheduledClasses.map(cls => {
     const enrolledCount = getSectionStudents(cls).length;
     const daysStr = (cls.days || []).join(', ');
-
     return `
       <div class="schedule-card" style="border-left: 4px solid var(--emerald-600);">
         <div class="schedule-head">
           <div>
             <div style="display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem;">
-              <span class="badge ok">${cls.label}</span>
-              <span class="badge" style="background: var(--canvas);">${daysStr}</span>
+              <span class="badge ok">${escapeHtml(cls.label || getClassSectionLabel(cls))}</span>
+              <span class="badge" style="background: var(--canvas);">${escapeHtml(daysStr)}</span>
             </div>
-            <div class="schedule-subject">${escapeHtml(cls.subject || 'Subject not assigned')} · ${cls.department} Department · ${cls.year}</div>
-            <div class="schedule-meta">${cls.room || 'Room TBA'} · ${cls.time || 'Time TBA'}</div>
+            <div class="schedule-subject">${escapeHtml(cls.subject || 'Subject not assigned')} · ${escapeHtml(cls.department || '')} Department · ${escapeHtml(cls.year || '')}</div>
+            <div class="schedule-meta">${escapeHtml(cls.room || 'Room TBA')} · ${escapeHtml(cls.time || 'Time TBA')}</div>
           </div>
           <span class="muted" style="font-size: 0.8rem; white-space: nowrap;">${enrolledCount} enrolled</span>
         </div>
         <div class="schedule-actions">
-          <button class="btn btn-secondary btn-block" onclick="openClassRosterById('${cls.id}')">Student List</button>
-          <button class="btn btn-secondary btn-block" onclick="openScheduleModal('${cls.id}')">Edit Schedule</button>
-          <button class="btn primary btn-block" onclick="openAttendanceSetupForSection('${cls.id}')">⚡ Take Attendance</button>
+          <button class="btn btn-secondary btn-block" onclick="openClassRosterById('${escapeHtml(cls.id)}')">Student List</button>
+          <button class="btn btn-secondary btn-block" onclick="openScheduleModal('${escapeHtml(cls.id)}')">Edit Schedule</button>
+          <button class="btn primary btn-block" onclick="openAttendanceSetupForSection('${escapeHtml(cls.id)}')">⚡ Take Attendance</button>
         </div>
       </div>
     `;
   }).join('');
 }
-
 function fillScheduleEditor() {
-  const cls = getTermClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
+  const cls = getSchedulableClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
   $$('input[name="schedule-day"]').forEach(input => {
     input.checked = Boolean(cls && (cls.days || []).includes(input.value));
   });
@@ -747,13 +762,13 @@ function fillScheduleEditor() {
 
 window.openScheduleModal = classId => {
   const select = $('#schedule-class-select');
-  const assignments = getTermClasses();
+  const assignments = getSchedulableClasses();
   select.innerHTML = assignments.map(cls =>
-    `<option value="${escapeHtml(cls.id)}">${escapeHtml(getClassSectionLabel(cls))} · ${escapeHtml(cls.department)} Department · ${escapeHtml(cls.year)} · ${escapeHtml(cls.subject || 'Choose subject')}</option>`
+    `<option value="${escapeHtml(cls.id)}">${escapeHtml(getClassSectionLabel(cls))} · ${escapeHtml(cls.department)} Department · ${escapeHtml(cls.year)} · ${escapeHtml(cls.subject || 'Subject not assigned')}</option>`
   ).join('');
-  if (!assignments.length) return;
+  if (!assignments.length) { toast('No assigned subjects are available to schedule.', 'warn'); return; }
   const selected = assignments.find(cls => String(cls.id) === String(classId));
-  if (classId && !selected) { toast('You do not have access to that section.', 'danger'); return; }
+  if (classId && !selected) { toast('You can schedule only your assigned subjects.', 'danger'); return; }
   select.value = String(selected?.id || assignments[0].id);
   fillScheduleEditor();
   $('#schedule-modal').showModal();
@@ -766,11 +781,15 @@ $('#schedule-cancel').onclick = () => $('#schedule-modal').close();
 
 $('#schedule-form').onsubmit = async event => {
   event.preventDefault();
-  const cls = getTermClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
-  if (!cls) return;
+  const cls = getSchedulableClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
+  if (!cls) {
+    $('#schedule-msg').textContent = 'You can schedule only your assigned subjects.';
+    $('#schedule-msg').hidden = false;
+    return;
+  }
   const days = $$('input[name="schedule-day"]:checked').map(input => input.value);
   if (!days.length) {
-    $('#schedule-msg').textContent = 'Select at least one day for this section.';
+    $('#schedule-msg').textContent = 'Select at least one day for this subject.';
     $('#schedule-msg').hidden = false;
     return;
   }
@@ -789,11 +808,11 @@ $('#schedule-form').onsubmit = async event => {
   $('#schedule-modal').close();
   renderDashboard();
   renderSetup();
-  toast(`${getClassSectionLabel(cls)} schedule saved.`);
+  toast(`${cls.subject || getClassSectionLabel(cls)} schedule saved.`);
 };
 
 $('#remove-class-schedule').onclick = async () => {
-  const cls = getTermClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
+  const cls = getSchedulableClasses().find(item => String(item.id) === String($('#schedule-class-select').value));
   if (!cls) return;
   const result = await FaceAPI.updateClass(cls.id, { days: [], time: '' });
   if (!result.ok) {
@@ -804,9 +823,8 @@ $('#remove-class-schedule').onclick = async () => {
   $('#schedule-modal').close();
   renderDashboard();
   renderSetup();
-  toast(`${getClassSectionLabel(cls)} removed from the schedule.`);
+  toast(`${cls.subject || getClassSectionLabel(cls)} removed from the schedule.`);
 };
-
 function renderRecentDashboardHistory() {
   const container = $('#dash-recent-history');
   const recent = getVisibleHistory().slice(0, 4);
@@ -969,6 +987,7 @@ $('#roster-owner-select')?.addEventListener('change', async event => {
   if (USE_MOCK) DB.save();
   renderClassRoster();
   renderDashboard();
+  renderFaculty();
   renderStudents();
   renderReports();
 });
@@ -1090,7 +1109,6 @@ function countDefaultersAtLimit(minPct, warningPct) {
 function updateSettingsPreview() {
   const minInput = $('#settings-min-number');
   const slider = $('#settings-min-slider');
-  const warningInput = $('#settings-warning-number');
   const preview = $('#settings-preview-text');
   $('#settings-message').hidden = true;
   const minPct = Number(minInput.value);
@@ -1100,17 +1118,9 @@ function updateSettingsPreview() {
   }
   slider.value = String(minPct);
 
-  let warningPct = warningInput.value.trim() === '' ? NaN : Number(warningInput.value);
-  if (Number.isInteger(warningPct) && warningPct >= minPct) {
-    warningPct = minPct - 1;
-    warningInput.value = String(warningPct);
-  }
-  if (!Number.isInteger(warningPct) || warningPct < 0 || warningPct >= minPct) {
-    preview.textContent = 'Set the warning band to a whole number below the minimum.';
-    return;
-  }
-
+  const warningPct = Math.min(getWarningThreshold(), minPct - 1);
   const candidateDefaulters = countDefaultersAtLimit(minPct, warningPct);
+
   const currentDefaulters = countDefaultersAtLimit(getMinAttendance(), getWarningThreshold());
   preview.textContent = `At ${minPct}%, ${candidateDefaulters} students would be defaulters (currently ${currentDefaulters}).`;
 }
@@ -1181,7 +1191,7 @@ $('#subject-form').addEventListener('submit', async event => {
   if (index >= 0) DB.subjects[index] = subject; else if (!USE_MOCK) DB.subjects.push(subject);
   syncSubjectFaculty(subject.id);
   if (!DB.save()) { toast('Subject could not be saved. Check browser storage.', 'danger'); return; }
-  resetSubjectForm(); renderSubjects(); toast('Subject saved.');
+  resetSubjectForm(); renderSubjects(); renderFaculty(); renderDashboard(); toast('Subject saved.');
 });
 $('#subject-cancel').addEventListener('click', resetSubjectForm);
 $('#subject-list').addEventListener('click', async event => {
@@ -1202,14 +1212,13 @@ $('#subject-list').addEventListener('click', async event => {
     const result = await FaceAPI.deleteSubject(remove.dataset.subjectDelete);
     if (!result.ok) return toast(result.error || 'Subject could not be deleted.', 'danger');
     DB.subjects = DB.subjects.filter(item => String(item.id) !== remove.dataset.subjectDelete);
-    if (DB.save()) { renderSubjects(); toast('Subject deleted.'); } else toast('Subject could not be deleted.', 'danger');
+    if (DB.save()) { renderSubjects(); renderFaculty(); renderDashboard(); toast('Subject deleted.'); } else toast('Subject could not be deleted.', 'danger');
   }
 });
 
 function renderSettings() {
   $('#settings-min-number').value = String(getMinAttendance());
   $('#settings-min-slider').value = String(getMinAttendance());
-  $('#settings-warning-number').value = String(getWarningThreshold());
   $('#settings-auto-switch-term').checked = DB.config.autoSwitchTermByDate !== false;
   $('#settings-default-odd').value = String(DB.config.defaultOddSemester || 1);
   $('#settings-default-even').value = String(DB.config.defaultEvenSemester || 2);
@@ -1242,87 +1251,7 @@ $('#term-list')?.addEventListener('click', event => {
   DB.save(); renderSettings(); renderDashboard(); renderHistory(); renderReports(); renderDefaulters(); renderStudents(); toast('Term status updated.');
 });
 
-function exportAllDatabaseData() {
-  if (!isFacultyHod()) return toast('Data backup is available to HOD accounts.', 'warn');
-  const visibleClasses = getMyClasses();
-  const visibleClassIds = new Set(visibleClasses.map(cls => String(cls.id)));
-  const visibleSessionIds = new Set(getVisibleHistory().map(session => String(session.id)));
-  const departmentTeachers = [...getDepartmentFaculty(), DB.teacher];
-  const snapshot = { teacher: DB.teacher, teachers: departmentTeachers, classes: visibleClasses, students: getVisibleStudents(), history: getVisibleHistory(), terms: DB.terms || [], selectedTermId: DB.selectedTermId, subjects: (DB.subjects || []).filter(subject => String(subject.department || '').toLowerCase() === String(DB.teacher.department || '').toLowerCase()), auditLog: (DB.auditLog || []).filter(entry => visibleSessionIds.has(String(entry.sessionId || ''))), config: DB.config, department: DB.teacher.department };
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `faceauth-backup-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href);
-}
-async function updateStorageUsage() {
-  const progress = $('#storage-usage'), label = $('#storage-usage-label');
-  if (!progress || !label) return;
-  try {
-    const estimate = await navigator.storage?.estimate?.();
-    if (!estimate?.quota) { label.textContent = 'Storage estimate unavailable'; return; }
-    const used = estimate.usage || 0; progress.value = Math.min(100, used / estimate.quota * 100);
-    label.textContent = `${(used / 1048576).toFixed(1)} MB of ${(estimate.quota / 1048576).toFixed(0)} MB`;
-  } catch { label.textContent = 'Storage estimate unavailable'; }
-}
-$('#backup-download').addEventListener('click', exportAllDatabaseData);
-$('#backup-file').addEventListener('change', async event => {
-  const file = event.target.files?.[0]; if (!file) return;
-  try {
-    const backup = JSON.parse(await file.text());
-    const required = ['teachers', 'classes', 'students', 'history'];
-    const arraysValid = backup && required.every(key => Array.isArray(backup[key]) && backup[key].every(item => item && typeof item === 'object' && !Array.isArray(item)));
-    const optionalArraysValid = (backup?.subjects === undefined || (Array.isArray(backup.subjects) && backup.subjects.every(item => item && typeof item === 'object'))) && (backup?.terms === undefined || (Array.isArray(backup.terms) && backup.terms.every(item => item && typeof item === 'object'))) && (backup?.auditLog === undefined || (Array.isArray(backup.auditLog) && backup.auditLog.every(item => item && typeof item === 'object')));
-    const configValid = backup?.config && typeof backup.config === 'object' && Number.isInteger(backup.config.minAttendancePercent) && backup.config.minAttendancePercent >= 40 && backup.config.minAttendancePercent <= 100 && Number.isInteger(backup.config.warningThreshold) && backup.config.warningThreshold >= 0 && backup.config.warningThreshold < backup.config.minAttendancePercent && Array.isArray(backup.config.departments) && Array.isArray(backup.config.years);
-    if (!arraysValid || !optionalArraysValid || !configValid || !backup.teacher || typeof backup.teacher !== 'object' || String(backup.department || backup.teacher.department || '').toLowerCase() !== String(DB.teacher.department || '').toLowerCase()) throw new Error('The file does not contain a valid backup for your department.');
-    const department = String(DB.teacher.department || '').toLowerCase();
-    const scopedClasses = backup.classes.filter(cls => String(cls.department || '').toLowerCase() === department);
-    const scopedTeachers = backup.teachers.filter(teacher => String(teacher.department || '').toLowerCase() === department);
-    if (scopedClasses.length !== backup.classes.length || scopedTeachers.length !== backup.teachers.length || backup.students.some(student => String(student.department || '').toLowerCase() !== department)) throw new Error('This backup contains records outside your department.');
-    if (!confirm(`Replace ${DB.teacher.department} department data with this backup?`)) return;
-    const old = Object.fromEntries(['teacher', 'teachers', 'classes', 'students', 'history', 'terms', 'selectedTermId', 'subjects', 'auditLog', 'config'].map(key => [key, DB[key]]));
-    const deptClasses = new Set(DB.classes.filter(cls => String(cls.department || '').toLowerCase() === department).map(cls => String(cls.id)));
-    const affectedStudentIds = new Set(DB.classes.filter(cls => deptClasses.has(String(cls.id))).flatMap(cls => (cls.studentIds || []).map(String)));
-    const affectedHistoryIds = new Set(DB.history.filter(session => deptClasses.has(String(session.classId))).map(session => String(session.id)));
-    DB.teachers = DB.teachers.filter(teacher => String(teacher.department || '').toLowerCase() !== department).concat(scopedTeachers);
-    DB.classes = DB.classes.filter(cls => String(cls.department || '').toLowerCase() !== department).concat(scopedClasses);
-    const importedStudentIds = new Set(backup.students.map(student => String(student.id)));
-    DB.students = DB.students.filter(student => !affectedStudentIds.has(String(student.id)) && !importedStudentIds.has(String(student.id))).concat(backup.students);
-    DB.history = DB.history.filter(session => !deptClasses.has(String(session.classId))).concat(backup.history.filter(session => scopedClasses.some(cls => String(cls.id) === String(session.classId))));
-    DB.teacher = DB.teachers.find(teacher => String(teacher.id) === String(DB.teacher?.id)) || DB.teacher;
-    DB.config = { ...COLLEGE_CONFIG, ...backup.config };
-    DB.subjects = DB.subjects.filter(subject => String(subject.department || '').toLowerCase() !== department).concat((backup.subjects || []).filter(subject => String(subject.department || '').toLowerCase() === department));
-    DB.auditLog = DB.auditLog.filter(entry => !affectedHistoryIds.has(String(entry.sessionId || ''))).concat((backup.auditLog || []).filter(entry => backup.history.some(session => String(session.id) === String(entry.sessionId))));
-    DB.terms = backup.terms || DB.terms; DB.selectedTermId = backup.selectedTermId || DB.terms.find(term => term.status === 'active')?.id;
-    if (!DB.save()) { Object.assign(DB, old); throw new Error('Backup could not be saved.'); }
-    DB.load();
-    toast('Backup restored.'); show('dashboard');
-  } catch (error) { toast(error.message || 'Could not read this backup.', 'danger'); }
-  finally { event.target.value = ''; }
-});
-
-$('#promotion-preview').addEventListener('click', () => {
-  const department = $('#promotion-department').value;
-  const counts = COLLEGE_CONFIG.years.map((year, index) => `${escapeHtml(year)} → ${escapeHtml(COLLEGE_CONFIG.years[index + 1] || '4th Year (final year)')}: ${getOwnedStudents().filter(student => student.department === department && student.year === year).length}`);
-  $('#promotion-preview-output').textContent = `${department}: ${counts.join(' · ')}`;
-  $('#promotion-apply').disabled = false;
-});
-$('#promotion-apply').addEventListener('click', () => {
-  const department = $('#promotion-department').value;
-  if (!confirm(`Promote ${department} students by one year? Existing attendance history will remain unchanged.`)) return;
-  const previousStudents = getOwnedStudents().map(student => ({ student, year: student.year }));
-  const previousClasses = getOwnedClasses().map(cls => ({ cls, year: cls.year }));
-  getOwnedStudents().filter(student => student.department === department).forEach(student => {
-    const index = COLLEGE_CONFIG.years.indexOf(student.year);
-    if (index >= 0 && index < COLLEGE_CONFIG.years.length - 1) student.year = COLLEGE_CONFIG.years[index + 1];
-  });
-  getOwnedClasses().filter(cls => cls.department === department).forEach(cls => {
-    const index = COLLEGE_CONFIG.years.indexOf(cls.year);
-    if (index >= 0 && index < COLLEGE_CONFIG.years.length - 1) cls.year = COLLEGE_CONFIG.years[index + 1];
-  });
-  if (!DB.save()) { previousStudents.forEach(item => { item.student.year = item.year; }); previousClasses.forEach(item => { item.cls.year = item.year; }); toast('Promotion could not be saved.', 'danger'); return; }
-  $('#promotion-apply').disabled = true; $('#promotion-preview-output').textContent = '';
-  renderStudents(); renderDashboard(); renderReports(); renderStudentEditor(); if (selectedClassForRoster) renderClassRoster(); toast(`${department} students promoted.`);
-});
-
-function saveAttendanceSettings(minPct, warningPct) {
+function saveAttendanceSettings(minPct, warningPct = Math.min(getWarningThreshold(), minPct - 1)) {
   if (!confirm('This applies to all past and future attendance. Records are not changed; statuses are recalculated.')) return false;
   const oldConfig = DB.config;
   DB.config = { ...oldConfig, minAttendancePercent: minPct, warningThreshold: warningPct };
@@ -1340,7 +1269,7 @@ function saveAttendanceSettings(minPct, warningPct) {
   if (selectedClassForRoster) renderClassRoster();
   renderHistory();
   renderSettings();
-  toast(`Attendance settings saved: minimum ${minPct}%, warning ${getWarningThreshold()}%.`);
+  toast(`Attendance settings saved: minimum ${minPct}%.`);
   return true;
 }
 
@@ -1349,8 +1278,6 @@ $('#settings-min-slider').addEventListener('input', () => {
   $('#settings-min-number').value = $('#settings-min-slider').value;
   updateSettingsPreview();
 });
-$('#settings-warning-number').addEventListener('input', updateSettingsPreview);
-$('#settings-warning-number').addEventListener('change', updateSettingsPreview);
 $$('[data-setting-preset]').forEach(button => {
   button.addEventListener('click', () => {
     $('#settings-min-number').value = button.dataset.settingPreset;
@@ -1361,25 +1288,31 @@ $$('[data-setting-preset]').forEach(button => {
 $('#attendance-settings-form').onsubmit = event => {
   event.preventDefault();
   const minPct = Number($('#settings-min-number').value);
-  const warningText = $('#settings-warning-number').value.trim();
-  const warningPct = warningText === '' ? NaN : Number(warningText);
   const message = $('#settings-message');
+
   if (!Number.isInteger(minPct) || minPct < 40 || minPct > 100) {
     message.textContent = 'Minimum attendance must be a whole number from 40 to 100.';
     message.hidden = false;
     return;
   }
-  if (!Number.isInteger(warningPct) || warningPct < 0 || warningPct >= minPct || warningPct > 99) {
-    message.textContent = 'Warning band must be a whole number lower than the minimum attendance limit.';
-    message.hidden = false;
-    return;
-  }
+
   DB.config = { ...DB.config, autoSwitchTermByDate: $('#settings-auto-switch-term').checked, defaultOddSemester: Number($('#settings-default-odd').value), defaultEvenSemester: Number($('#settings-default-even').value) };
-  saveAttendanceSettings(minPct, warningPct);
+  saveAttendanceSettings(minPct);
 };
 $('#settings-reset-default').onclick = () => {
-  saveAttendanceSettings(75, 65);
+  saveAttendanceSettings(75);
 };
+
+function getDepartmentSectionGroups() {
+  const groups = new Map();
+  getDepartmentTermClasses().forEach(cls => {
+    const label = getClassSectionLabel(cls);
+    const key = `${String(cls.department || '').toLowerCase()}|${String(cls.year || '').toLowerCase()}|${label.toLowerCase()}`;
+    if (!groups.has(key)) groups.set(key, { label, department: cls.department || '', year: cls.year || '', classes: [] });
+    groups.get(key).classes.push(cls);
+  });
+  return [...groups.values()].map(group => ({ ...group, representative: group.classes[0] }));
+}
 
 function getSectionGroups() {
   const groups = new Map();
@@ -1409,8 +1342,23 @@ function getMySubjects() {
   return [...new Map((DB.subjects || []).filter(subject => ids.has(String(subject.id))).map(subject => [String(subject.id), subject])).values()];
 }
 
+function getDepartmentTermClasses() {
+  const department = String(DB.teacher?.department || '').trim().toLowerCase();
+  return (DB.classes || []).filter(cls =>
+    String(cls.department || '').trim().toLowerCase() === department &&
+    (!DB.selectedTermId || !cls.termId || String(cls.termId) === String(DB.selectedTermId))
+  );
+}
+
+function canManageSession(session) {
+  if (!session || !DB.teacher?.id) return false;
+  const cls = (DB.classes || []).find(item => String(item.id) === String(session.classId));
+  if (!cls || String(cls.department || '').trim().toLowerCase() !== String(DB.teacher.department || '').trim().toLowerCase()) return false;
+  return isFacultyHod() || String(cls.teacherId || '') === String(DB.teacher.id);
+}
+
 function getVisibleHistory() {
-  const classIds = new Set(getMyClasses().map(cls => String(cls.id)));
+  const classIds = new Set(getDepartmentTermClasses().map(cls => String(cls.id)));
   const termId = String(DB.selectedTermId || DB.terms.find(term => term.status === 'active')?.id || '');
   return (DB.history || []).filter(session => classIds.has(String(session.classId)) && (!termId || String(session.termId || '') === termId));
 }
@@ -1518,8 +1466,32 @@ function isFacultyHod(teacher = DB.teacher || currentTeacher) { return getRole(t
 function renderFaculty() {
   if (!isFacultyHod()) return;
   const host = $('#faculty-list'); if (!host) return;
-  const faculty = (DB.teachers || []).filter(teacher => String(teacher.department || '').toLowerCase() === String(DB.teacher.department || '').toLowerCase());
-  host.innerHTML = faculty.map(teacher => `<article class="subject-master-row"><div><b><button type="button" class="btn-text-link" data-faculty-details="${escapeHtml(teacher.id)}">${escapeHtml(teacher.name)}</button></b><p class="muted">${escapeHtml(teacher.id)} · ${escapeHtml(teacher.designation || 'Faculty')} · ${getRole(teacher) === 'hod' ? 'HOD' : 'Faculty'} · ${escapeHtml(teacher.department || 'Department not set')}</p></div><div>${String(teacher.id) === String(DB.teacher.id) ? '<span class="badge ok">Current HOD</span>' : `<button type="button" class="btn btn-secondary" data-promote-teacher="${escapeHtml(teacher.id)}">Make HOD</button>`}</div></article>`).join('') || '<p class="muted">No faculty accounts found.</p>';
+  const department = String(DB.teacher.department || '').toLowerCase();
+  const faculty = (DB.teachers || []).filter(teacher => String(teacher.department || '').toLowerCase() === department);
+  host.innerHTML = faculty.map(teacher => {
+    const assignedClasses = getTermClasses().filter(cls =>
+      String(cls.teacherId || '') === String(teacher.id) &&
+      String(cls.department || '').toLowerCase() === department &&
+      Boolean(String(DB.subjects.find(subject => String(subject.id) === String(cls.subjectId || ''))?.name || cls.subject || '').trim())
+    );
+    const subjects = new Map();
+    assignedClasses.forEach(cls => {
+      const subject = DB.subjects.find(item => String(item.id) === String(cls.subjectId || ''));
+      const subjectName = subject?.name || cls.subject || 'Subject not set';
+      const subjectLabel = [subject?.code || cls.code, subjectName].filter(Boolean).join(' · ');
+      const contexts = [cls.year, getClassSectionLabel(cls)].filter(Boolean).join(' · ');
+      const key = `${String(subject?.id || subjectName).toLowerCase()}`;
+      if (!subjects.has(key)) subjects.set(key, { label: subjectLabel, contexts: new Set() });
+      if (contexts) subjects.get(key).contexts.add(contexts);
+    });
+    const teaching = [...subjects.values()].map(item =>
+      `${item.label}${item.contexts.size ? ` (${[...item.contexts].join(', ')})` : ''}`
+    );
+    const teachingText = teaching.length
+      ? `<p class="muted" style="margin:.35rem 0 0;font-size:.82rem"><b>Teaching:</b> ${teaching.map(escapeHtml).join(' · ')}</p>`
+      : '<p class="muted" style="margin:.35rem 0 0;font-size:.82rem"><b>Teaching:</b> No subjects assigned for the selected term.</p>';
+    return `<article class="subject-master-row"><div><b><button type="button" class="btn-text-link" data-faculty-details="${escapeHtml(teacher.id)}">${escapeHtml(teacher.name)}</button></b><p class="muted">${escapeHtml(teacher.id)} · ${escapeHtml(teacher.designation || 'Faculty')} · ${getRole(teacher) === 'hod' ? 'HOD' : 'Faculty'} · ${escapeHtml(teacher.department || 'Department not set')}</p>${teachingText}</div><div>${String(teacher.id) === String(DB.teacher.id) ? '<span class="badge ok">Current HOD</span>' : `<button type="button" class="btn btn-secondary" data-promote-teacher="${escapeHtml(teacher.id)}">Make HOD</button>`}</div></article>`;
+  }).join('') || '<p class="muted">No faculty accounts found.</p>';
 }
 function renderTeacherAssignments(teacherId) {
   const classes = getMyClasses().filter(cls => String(cls.teacherId || '') === String(teacherId));
@@ -1574,6 +1546,8 @@ $('#faculty-assignment-form').onsubmit = async event => {
   if (USE_MOCK) DB.save();
   $('#faculty-assignment-dialog').close();
   renderTeacherAssignments(teacherId);
+  renderFaculty();
+  renderDashboard();
   toast('Teaching assignment added.');
 };
 $('#faculty-details-assignments')?.addEventListener('change', async event => {
@@ -1583,6 +1557,10 @@ $('#faculty-details-assignments')?.addEventListener('change', async event => {
   const assigned = await assignFaculty(classId, select.value);
   if (!assigned) { toast('Could not update this teaching assignment.', 'danger'); renderTeacherAssignments($('#faculty-details-old-id').value); return; }
   if (USE_MOCK) DB.save();
+  renderTeacherAssignments($('#faculty-details-old-id').value);
+  renderFaculty();
+  renderDashboard();
+  renderSetup();
   toast('Teaching assignment updated.');
 });
 $('#faculty-list')?.addEventListener('click', async event => {
@@ -2516,58 +2494,87 @@ $('#reg-save').onclick = async () => {
 // 5. TAKE ATTENDANCE SETUP & LIVE SESSION
 // ==========================================================
 function renderSetup() {
-  $('#c-subject').value = '';
   $('#c-date').value = new Date().toISOString().slice(0, 10);
   $('#c-confidence').value = DB.config.confidenceThreshold ?? 0.75;
   $('#c-late-minutes').value = DB.config.lateAfterMinutes ?? 10;
   $('#c-session-notes').value = '';
 
-  const select = $('#c-class-select');
-  const assignments = getTermClasses();
-  select.innerHTML = assignments.length
-    ? assignments.map(cls => `<option value="${escapeHtml(cls.id)}">${escapeHtml(getClassSectionLabel(cls))} · ${escapeHtml(cls.department)} Department · ${escapeHtml(cls.year)}${cls.subject ? ` · ${escapeHtml(cls.subject)}` : ' · Choose subject'} (${getSectionStudents(cls).length} students)</option>`).join('')
-    : '<option value="">No department sections available - create one first</option>';
+  const yearSelect = $('#c-year-select');
+  const sectionSelect = $('#c-class-select');
+  const groups = getSectionGroups();
+  const pendingClass = pendingSetupClassId
+    ? getTermClasses().find(cls => String(cls.id) === String(pendingSetupClassId))
+    : null;
+  const years = [...new Set(groups.map(group => String(group.year || '').trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  yearSelect.innerHTML = `<option value="">Choose a year</option>${years.map(year => `<option value="${escapeHtml(year)}">${escapeHtml(year)}</option>`).join('')}`;
+  yearSelect.disabled = !years.length;
+  if (pendingClass) yearSelect.value = String(pendingClass.year || '');
+  pendingSetupClassId = null;
 
-  select.disabled = !assignments.length;
-  $('#c-go').disabled = !assignments.length;
-  if (pendingSetupClassId) {
-    const selectedClass = getTermClasses().find(cls => String(cls.id) === String(pendingSetupClassId));
-    if (selectedClass) select.value = String(selectedClass.id);
-    pendingSetupClassId = null;
-  }
+  const populateSections = preferredClassId => {
+    const selectedYear = String(yearSelect.value || '').toLowerCase();
+    const yearGroups = groups.filter(group => String(group.year || '').toLowerCase() === selectedYear);
+    sectionSelect.innerHTML = selectedYear
+      ? `<option value="">Choose a section</option>${yearGroups.map(group => `<option value="${escapeHtml(group.representative.id)}">${escapeHtml(group.label)}</option>`).join('')}`
+      : '<option value="">Choose a year first</option>';
+    sectionSelect.disabled = !yearGroups.length;
+    if (preferredClassId) {
+      const group = yearGroups.find(item => item.classes.some(cls => String(cls.id) === String(preferredClassId)));
+      if (group) sectionSelect.value = String(group.representative.id);
+    }
+    $('#c-go').disabled = !sectionSelect.value;
+  };
 
-  select.onchange = () => {
+  populateSections(pendingClass?.id);
+  yearSelect.onchange = () => {
+    $('#c-subject-select').value = '';
+    populateSections('');
+    fillLectureDetailsFromClass();
+    refreshSetupSubjectOptions();
+    updateSetupRosterPreview();
+  };
+  sectionSelect.onchange = () => {
+    $('#c-subject-select').value = '';
+    $('#c-go').disabled = !sectionSelect.value;
     fillLectureDetailsFromClass();
     refreshSetupSubjectOptions();
     updateSetupRosterPreview();
   };
   fillLectureDetailsFromClass();
-  refreshSetupSubjectOptions();
+  refreshSetupSubjectOptions(pendingClass?.subjectId || '');
   updateSetupRosterPreview();
 }
-
-function refreshSetupSubjectOptions() {
+function refreshSetupSubjectOptions(preferredSubjectId = '') {
   const select = $('#c-subject-select');
   if (!select) return;
   const cls = getTermClasses().find(item => String(item.id) === String($('#c-class-select').value));
-  const assignedSubject = cls?.subjectId ? DB.subjects.find(subject => String(subject.id) === String(cls.subjectId)) : null;
-  const candidates = (DB.subjects || []).filter(subject => cls && subject.department === cls.department && subject.year === cls.year && (!subject.termId || String(subject.termId) === String(DB.selectedTermId)));
-  select.innerHTML = `<option value="">Choose a subject</option>${(assignedSubject ? [assignedSubject] : candidates).map(subject => `<option value="${escapeHtml(subject.id)}">${escapeHtml(subject.code)} · ${escapeHtml(subject.name)}</option>`).join('')}`;
-  select.value = assignedSubject?.id || '';
-  select.disabled = !!assignedSubject;
-  $('#c-subject').value = assignedSubject?.name || '';
+  const sectionClasses = getSectionClasses(cls);
+  const assignedSubjects = sectionClasses
+    .map(item => DB.subjects.find(subject => String(subject.id) === String(item.subjectId || '')))
+    .filter(Boolean);
+  const candidates = assignedSubjects.length ? assignedSubjects : (DB.subjects || []).filter(subject =>
+    cls && String(subject.department || '').toLowerCase() === String(cls.department || '').toLowerCase() &&
+    String(subject.year || '').toLowerCase() === String(cls.year || '').toLowerCase() &&
+    (!subject.termId || String(subject.termId) === String(DB.selectedTermId))
+  );
+  const uniqueSubjects = [...new Map(candidates.map(subject => [String(subject.id), subject])).values()];
+  select.innerHTML = `<option value="">Choose a subject</option>${uniqueSubjects.map(subject => `<option value="${escapeHtml(subject.id)}">${escapeHtml(subject.code)} · ${escapeHtml(subject.name)}</option>`).join('')}`;
+  select.disabled = !cls || !uniqueSubjects.length;
+  const currentSubjectId = preferredSubjectId || select.dataset.selectedSubjectId || '';
+  select.value = uniqueSubjects.some(subject => String(subject.id) === String(currentSubjectId)) ? String(currentSubjectId) : '';
+  select.dataset.selectedSubjectId = '';
 }
-$('#c-subject-select').addEventListener('change', async () => {
-  const subject = DB.subjects.find(item => String(item.id) === String($('#c-subject-select').value));
-  if (subject && !DB.classes.find(item => String(item.id) === String($('#c-class-select').value))?.subjectId) {
-    $('#c-subject').value = subject.name;
-    if (await linkClassSubject($('#c-class-select').value, subject.id) && USE_MOCK) DB.save();
-    refreshSetupSubjectOptions();
-  }
+$('#c-subject-select').addEventListener('change', () => {
+  fillLectureDetailsFromClass();
+  updateSetupRosterPreview();
 });
-
 function fillLectureDetailsFromClass() {
-  const cls = getTermClasses().find(c => String(c.id) === String($('#c-class-select').value));
+  const sectionClass = getTermClasses().find(c => String(c.id) === String($('#c-class-select').value));
+  const subjectId = $('#c-subject-select')?.value || '';
+  const cls = sectionClass && subjectId
+    ? getSectionClasses(sectionClass).find(item => String(item.subjectId || '') === String(subjectId)) || sectionClass
+    : sectionClass;
   $('#c-slot').value = cls?.time || '09:00 AM - 10:00 AM';
   $('#c-room').value = cls?.room || 'Room 304 / Lab 3';
 }
@@ -2603,16 +2610,20 @@ function updateSetupRosterPreview() {
 
 $('#c-go').onclick = async () => {
   $('#c-msg').hidden = true;
-  const classId = $('#c-class-select').value;
-  const cls = getTermClasses().find(c => String(c.id) === String(classId));
+  const sectionClass = getTermClasses().find(cls => String(cls.id) === String($('#c-class-select').value));
+  const selectedSubjectId = $('#c-subject-select').value;
+  const cls = sectionClass && selectedSubjectId
+    ? getSectionClasses(sectionClass).find(item => String(item.subjectId || '') === String(selectedSubjectId)) || sectionClass
+    : sectionClass;
   if (!cls) return;
 
-  const subject = $('#c-subject').value.trim();
+  const selectedSubject = DB.subjects.find(item => String(item.id) === String(selectedSubjectId));
+  const subject = selectedSubject?.name || '';
   const lectureTime = $('#c-slot').value.trim();
   const room = $('#c-room').value.trim();
   const lectureDate = $('#c-date').value;
-  if (!subject || !lectureTime || !room || !lectureDate) {
-    $('#c-msg').textContent = 'Enter the lecture subject, date, time, and classroom before continuing.';
+  if (!selectedSubject || !lectureTime || !room || !lectureDate) {
+    $('#c-msg').textContent = 'Choose a subject and enter the date, time, and classroom before continuing.';
     $('#c-msg').hidden = false;
     return;
   }
@@ -2625,11 +2636,9 @@ $('#c-go').onclick = async () => {
   }
 
   const mode = $('input[name="att-mode"]:checked')?.value || 'manual';
-  const selectedSubject = (cls.subjectId && DB.subjects.find(item => String(item.id) === String(cls.subjectId))) || DB.subjects.find(item => String(item.id) === String($('#c-subject-select').value) && item.name === subject) || await ensureSubjectForClass(cls, subject);
-  if (!selectedSubject) return toast('Choose or enter a valid subject before continuing.', 'warn');
   if (!await linkClassSubject(cls.id, selectedSubject.id)) return;
   const duplicate = getVisibleHistory().some(record => String(record.classId) === String(cls.id) &&
-    ((record.subjectCode && selectedSubject?.code) ? String(record.subjectCode).toLowerCase() === String(selectedSubject.code).toLowerCase() : record.subject === subject) &&
+    ((record.subjectCode && selectedSubject.code) ? String(record.subjectCode).toLowerCase() === String(selectedSubject.code).toLowerCase() : record.subject === subject) &&
     record.lectureTime === lectureTime && record.dateISO === lectureDate);
   if (duplicate) {
     $('#c-msg').textContent = 'Attendance is already recorded for this section, subject, slot, and date.';
@@ -2641,7 +2650,6 @@ $('#c-go').onclick = async () => {
   DB.save();
   startSession(cls, mode, { subject: selectedSubject.name, lectureTime, room, lectureDate, subjectId: selectedSubject.id, subjectCode: selectedSubject.code, notes: $('#c-session-notes').value.trim() });
 };
-
 $$('input[name="att-mode"]').forEach(input => {
   input.addEventListener('change', () => {
     $$('.attendance-method-cards .radio-card').forEach(card => {
@@ -2951,7 +2959,7 @@ function renderHistory() {
 
   // Populate class filter dropdown
   classFilter.innerHTML = '<option value="all">All Sections</option>' +
-    getSectionGroups().map(group => `<option value="${group.representative.id}">${group.label} · ${group.department} Department</option>`).join('');
+    getDepartmentSectionGroups().map(group => `<option value="${group.representative.id}">${group.label} · ${group.department} Department</option>`).join('');
 
   filterAndRenderHistoryTable();
 }
@@ -2970,7 +2978,7 @@ const getHistoryBeforeSemester = getFilteredHistoryRecords;
 getFilteredHistoryRecords = function () {
   const records = getHistoryBeforeSemester();
   const termId = String(DB.selectedTermId || DB.terms.find(term => term.status === 'active')?.id || '');
-  const visibleClassIds = new Set(getTermClasses().map(cls => String(cls.id)));
+  const visibleClassIds = new Set(getDepartmentTermClasses().map(cls => String(cls.id)));
   return records.filter(session => String(session.termId || '') === termId && visibleClassIds.has(String(session.classId)));
 };
 
@@ -3009,8 +3017,13 @@ function getFilteredHistoryRecords() {
 
   let records = getVisibleHistory();
   if (selectedClass !== 'all') {
-    const selected = getTermClasses().find(cls => String(cls.id) === String(selectedClass));
-    const sectionIds = new Set(getSectionClasses(selected).map(cls => String(cls.id)));
+    const departmentClasses = getDepartmentTermClasses();
+    const selected = departmentClasses.find(cls => String(cls.id) === String(selectedClass));
+    const sectionIds = new Set(selected ? departmentClasses.filter(cls =>
+      String(cls.department || '').toLowerCase() === String(selected.department || '').toLowerCase() &&
+      String(cls.year || '').toLowerCase() === String(selected.year || '').toLowerCase() &&
+      getClassSectionLabel(cls).toLowerCase() === getClassSectionLabel(selected).toLowerCase()
+    ).map(cls => String(cls.id)) : []);
     records = records.filter(h => sectionIds.has(String(h.classId)));
   }
   if (query) {
@@ -3051,9 +3064,13 @@ window.openSessionModal = sessionId => {
   const lectureTimeMeta = session.lectureTime ? ` · Lecture ${session.lectureTime}` : '';
   $('#sess-modal-meta').textContent = `${session.date} · ${session.time || ''}${lectureTimeMeta} · ${session.section || session.classLabel} · ${session.room || 'Main Hall'}`;
 
-  const visibleStudents = new Map(getVisibleStudents().map(student => [String(student.id), student]));
+  const sessionClass = (DB.classes || []).find(cls => String(cls.id) === String(session.classId));
+  const visibleStudents = new Map(getSectionStudentsRaw(sessionClass).map(student => [String(student.id), student]));
   const enrolled = (session.studentIds || []).map(id => visibleStudents.get(String(id))).filter(Boolean);
   const presentIds = new Set((session.presentIds || []).map(String));
+  const canEdit = canManageSession(session);
+  $('#sess-modal-body').closest('table').querySelector('thead th:last-child').textContent = canEdit ? 'Change Status' : 'Access';
+  $('#sess-modal-delete').hidden = !canEdit;
 
   $('#sess-modal-stats').innerHTML = `
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1.2rem 0;">
@@ -3076,9 +3093,7 @@ window.openSessionModal = sessionId => {
         <td><span class="badge ${isPresent ? 'ok' : 'danger'}">${isPresent ? 'Present' : 'Absent'}</span></td>
         <td><small class="muted">${methodStr}</small></td>
         <td><small class="muted">${rec.time || session.time || '—'}</small></td>
-        <td>
-          <button class="btn-xs ${isPresent ? 'danger' : 'primary'}" onclick="togglePastSessionAttendance('${session.id}', ${s.id}, '${isPresent ? 'absent' : 'present'}')">Mark ${isPresent ? 'Absent' : 'Present'}</button>
-        </td>
+        <td>${canEdit ? `<button class="btn-xs ${isPresent ? 'danger' : 'primary'}" onclick="togglePastSessionAttendance('${session.id}', ${s.id}, '${isPresent ? 'absent' : 'present'}')">Mark ${isPresent ? 'Absent' : 'Present'}</button>` : '<small class="muted">View only</small>'}</td>
       </tr>
     `;
   }).join('');
@@ -3092,8 +3107,10 @@ window.openSessionModal = sessionId => {
   const session = getVisibleHistory().find(item => String(item.id) === String(sessionId));
   if (!session) return;
   const rows = $$('#sess-modal-body tr');
+  const sessionClass = (DB.classes || []).find(cls => String(cls.id) === String(session.classId));
+  const sessionStudents = getSectionStudentsRaw(sessionClass);
   rows.forEach(row => {
-    const student = getVisibleStudents().find(item => String(item.roll) === String(row.children[1]?.textContent));
+    const student = sessionStudents.find(item => String(item.roll) === String(row.children[1]?.textContent));
     const record = student && (session.records || {})[String(student.id)];
     if (record?.late) {
       const badge = document.createElement('span'); badge.className = 'badge warn'; badge.textContent = 'Late';
@@ -3104,7 +3121,7 @@ window.openSessionModal = sessionId => {
 
 window.togglePastSessionAttendance = async (sessionId, studentId, newStatus) => {
   const session = getVisibleHistory().find(item => String(item.id) === String(sessionId));
-  if (!session) return toast('You do not have access to this attendance session.', 'danger');
+  if (!session || !canManageSession(session)) return toast('You can edit attendance only for your assigned subjects.', 'danger');
   const res = await FaceAPI.updateSessionRecord(sessionId, studentId, newStatus);
   if (!res.ok) { toast(res.error || 'Could not update this record.', 'danger'); return; }
   toast(`Updated record for student`);
@@ -3149,6 +3166,8 @@ $('#sess-modal-close').onclick = () => $('#session-modal').close();
 $('#sess-modal-done').onclick = () => $('#session-modal').close();
 
 $('#sess-modal-delete').onclick = async () => {
+  const session = getVisibleHistory().find(item => String(item.id) === String(inspectedSessionId));
+  if (!session || !canManageSession(session)) return toast('You can manage only attendance for your assigned subjects.', 'danger');
   if (confirm('Delete this attendance session log permanently?')) {
     const res = await FaceAPI.deleteSession(inspectedSessionId);
     if (!res.ok) { toast(res.error || 'Could not delete this session.', 'danger'); return; }
@@ -3569,9 +3588,6 @@ $('#csv-btn').onclick = () => {
   downloadCsv(rows, `official-attendance-report-${getClassSectionLabel(cls)}.csv`);
 };
 
-$('#print-report-btn').onclick = () => {
-  window.print();
-};
 
 function downloadCsv(rows, filename) {
   const content = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
@@ -4153,18 +4169,24 @@ function renderStudentDirectoryPage(students) {
     students.forEach((student, index) => {
       const department = String(student.department || 'Department not set');
       const year = String(student.year || 'Year not set');
+      const section = getStudentSectionLabel(student) || 'Unassigned';
       if (!departments.has(department)) departments.set(department, new Map());
       const years = departments.get(department);
-      if (!years.has(year)) years.set(year, []);
-      years.get(year).push(rows[index]);
+      if (!years.has(year)) years.set(year, new Map());
+      const sections = years.get(year);
+      if (!sections.has(section)) sections.set(section, []);
+      sections.get(section).push(rows[index]);
     });
     return [...departments.entries()].map(([department, years]) => {
-      const departmentCount = [...years.values()].reduce((count, yearRows) => count + yearRows.length, 0);
-      const yearGroups = [...years.entries()].map(([year, yearRows]) => `<details class="student-directory-group student-directory-year-group" open><summary>${escapeHtml(year)} <span class="badge ok">${yearRows.length}</span></summary><div class="table-responsive student-directory-table-wrap"><table class="data-table student-directory-table">${headers}<tbody>${yearRows.join('')}</tbody></table></div></details>`).join('');
+      const departmentCount = [...years.values()].reduce((count, sections) => count + [...sections.values()].reduce((sectionCount, sectionRows) => sectionCount + sectionRows.length, 0), 0);
+      const yearGroups = [...years.entries()].map(([year, sections]) => {
+        const yearCount = [...sections.values()].reduce((count, sectionRows) => count + sectionRows.length, 0);
+        const sectionGroups = [...sections.entries()].map(([section, sectionRows]) => `<details class="student-directory-group student-directory-section-group" open><summary>${escapeHtml(section)} <span class="badge ok">${sectionRows.length}</span></summary><div class="table-responsive student-directory-table-wrap"><table class="data-table student-directory-table">${headers}<tbody>${sectionRows.join('')}</tbody></table></div></details>`).join('');
+        return `<details class="student-directory-group student-directory-year-group" open><summary>${escapeHtml(year)} <span class="badge ok">${yearCount}</span></summary><div class="student-directory-group-children">${sectionGroups}</div></details>`;
+      }).join('');
       return `<details class="student-directory-group student-directory-department-group" open><summary>${escapeHtml(department)} <span class="badge ok">${departmentCount}</span></summary><div class="student-directory-group-children">${yearGroups}</div></details>`;
     }).join('');
-  }
-  const groups = new Map();
+  }  const groups = new Map();
   students.forEach((student, index) => {
     const key = `${student.department || '—'}|${student.year || 'Year not set'}|${getStudentSectionLabel(student)}`;
     if (!groups.has(key)) groups.set(key, { label: key.replaceAll('|', ' · '), rows: [] });
@@ -4772,3 +4794,29 @@ if ('serviceWorker' in navigator) {
     }));
   }).catch(() => {});
 }
+
+// Toggle visibility for login and faculty registration passwords.
+document.querySelectorAll('[data-password-toggle]').forEach(button => {
+  button.addEventListener('click', () => {
+    const input = document.getElementById(button.getAttribute('aria-controls'));
+    if (!input) return;
+    const showing = input.type === 'password';
+    input.type = showing ? 'text' : 'password';
+    button.textContent = showing ? 'Hide' : 'Show';
+    button.setAttribute('aria-pressed', String(showing));
+  });
+});
+// Keep the faculty registration form blank when opened and reset its visibility controls.
+$('#show-signup').addEventListener('click', () => {
+  $('#signup-form').reset();
+});
+$('#signup-form').addEventListener('reset', () => {
+  requestAnimationFrame(() => {
+    $('#signup-form').querySelectorAll('[data-password-toggle]').forEach(button => {
+      const input = document.getElementById(button.getAttribute('aria-controls'));
+      if (input) input.type = 'password';
+      button.textContent = 'Show';
+      button.setAttribute('aria-pressed', 'false');
+    });
+  });
+});

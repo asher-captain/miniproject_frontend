@@ -102,7 +102,7 @@
           </div>
           <div class="form-group">
             <label for="l-pw">Password</label>
-            <input id="l-pw" type="password" placeholder="Enter your password" required autocomplete="current-password">
+            <div class="password-input-wrap"><input id="l-pw" type="password" placeholder="Enter your password" required autocomplete="current-password"><button class="password-toggle" type="button" data-password-toggle="l-pw" aria-controls="l-pw" aria-pressed="false">Show</button></div>
           </div>
           <p id="l-err" class="alert-msg danger" hidden></p>
           <button class="btn primary btn-block btn-lg" id="l-btn" type="button">Sign In to Faculty Portal</button>
@@ -121,14 +121,14 @@
           <p class="muted">Create an instructor account to manage course attendance.</p>
         </div>
 
-        <form id="signup-form">
+        <form id="signup-form" autocomplete="off">
           <div class="form-group">
             <label for="su-name">Full Name</label>
-            <input id="su-name" type="text" placeholder="e.g. Dr. Ramesh Gupta" required autocomplete="name">
+            <input id="su-name" type="text" autocomplete="off" placeholder="e.g. Dr. Ramesh Gupta" required>
           </div>
           <div class="form-group">
             <label for="su-email">College Email Address</label>
-            <input id="su-email" type="email" placeholder="e.g. ramesh.g@college.edu" required autocomplete="email">
+            <input id="su-email" type="email" autocomplete="off" placeholder="e.g. ramesh.g@college.edu" required>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -149,11 +149,11 @@
           <div class="form-row">
             <div class="form-group">
               <label for="su-pw">Password</label>
-              <input id="su-pw" type="password" minlength="4" required placeholder="••••••••">
+              <div class="password-input-wrap"><input id="su-pw" type="password" autocomplete="new-password" minlength="4" required placeholder="••••••••"><button class="password-toggle" type="button" data-password-toggle="su-pw" aria-controls="su-pw" aria-pressed="false">Show</button></div>
             </div>
             <div class="form-group">
               <label for="su-confirm">Confirm</label>
-              <input id="su-confirm" type="password" minlength="4" required placeholder="••••••••">
+              <div class="password-input-wrap"><input id="su-confirm" type="password" autocomplete="new-password" minlength="4" required placeholder="••••••••"><button class="password-toggle" type="button" data-password-toggle="su-confirm" aria-controls="su-confirm" aria-pressed="false">Show</button></div>
             </div>
           </div>
           <div class="form-group faculty-id-upload">
@@ -229,12 +229,12 @@
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21V3Z"/><path d="M10 8h4m-4 4h4m-4 4h4"/></svg></span>
         <span>Session History</span>
       </a>
-      <a href="#audit-log" data-nav="audit-log" class="nav-item"><span class="nav-icon" aria-hidden="true">▤</span><span>Audit Log</span></a>
       <a href="#reports" data-nav="reports" class="nav-item">
         <span class="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17"/><rect x="7" y="12" width="3" height="5" rx=".5"/><rect x="13" y="8" width="3" height="9" rx=".5"/><rect x="19" y="4" width="3" height="13" rx=".5"/></svg></span>
         <span>Reports & Defaulters</span>
       </a>
       <a href="#defaulters" data-nav="defaulters" class="nav-item"><span class="nav-icon" aria-hidden="true">⚠</span><span>Defaulters</span></a>
+      <a href="#settings" data-nav="settings" class="nav-item" id="settings-nav" hidden><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a>
     </nav>
 
     <div class="sidebar-user">
@@ -277,8 +277,8 @@
       <div class="dashboard-section">
         <div class="section-head">
           <div>
-            <h3>Today's Lecture Schedule</h3>
-            <p class="muted">Select a scheduled lecture to take attendance.</p>
+            <h3>Lecture Schedule</h3>
+            <p class="muted">Your scheduled subjects for the selected term.</p>
           </div>
           <div class="header-actions">
             <span class="badge ok" id="today-day-badge">Today</span>
@@ -376,7 +376,7 @@
         </div>
         <div class="student-directory-tools">
           <div id="student-directory-chips" class="student-directory-chips" role="group" aria-label="Quick student filters"></div>
-          <div class="student-directory-count-tools"><span id="student-directory-count" class="muted" aria-live="polite"></span><label>Select <select id="student-selection-menu"><option value="">Choose…</option><option value="page">All on this page</option><option value="matching">All matching filters</option><option value="section">Whole section</option><option value="year">Whole year</option><option value="defaulters">Only defaulters</option><option value="noface">Without face data</option><option value="clear">Clear selection</option></select></label><button id="student-directory-clear" class="btn-xs" type="button">Clear filters</button><label>Rows <select id="student-directory-page-size"><option>25</option><option>50</option><option>100</option></select></label><label class="student-group-toggle"><input id="student-directory-group" type="checkbox"> Group by section</label><label class="student-group-toggle"><input id="student-directory-group-department-year" type="checkbox"> Group by department &amp; year</label></div>
+          <div class="student-directory-count-tools"><span id="student-directory-count" class="muted" aria-live="polite"></span><label>Select <select id="student-selection-menu"><option value="">Choose…</option><option value="page">All on this page</option><option value="matching">All matching filters</option><option value="section">Whole section</option><option value="year">Whole year</option><option value="defaulters">Only defaulters</option><option value="noface">Without face data</option><option value="clear">Clear selection</option></select></label><button id="student-directory-clear" class="btn-xs" type="button">Clear filters</button><label>Rows <select id="student-directory-page-size"><option>25</option><option>50</option><option>100</option></select></label><label class="student-group-toggle"><input id="student-directory-group" type="checkbox"> Group by section</label><label class="student-group-toggle"><input id="student-directory-group-department-year" type="checkbox"> Group by department, year &amp; section</label></div>
         </div>
         <div id="student-bulk-bar" class="student-bulk-bar" hidden>
           <span id="student-bulk-count" class="muted"></span>
@@ -692,7 +692,7 @@
         <div>
           <button class="btn-back page-back" type="button" data-app-back>← Back</button>
           <h2>Take Lecture Attendance</h2>
-          <p class="muted">Choose a department section, then enter the details for this lecture.</p>
+          <p class="muted">Choose a year, section, and subject for this lecture.</p>
         </div>
       </div>
 
@@ -701,17 +701,16 @@
           <h3>Lecture Session Details</h3>
           
           <div class="form-group">
-            <label for="c-class-select">Select Department Section</label>
-            <select id="c-class-select" class="select-lg"></select>
-          </div>
-
-          <div class="form-group">
-            <label for="c-subject-select">Choose from Subjects</label>
-            <select id="c-subject-select"><option value="">Choose a subject (optional)</option></select>
+            <label for="c-year-select">Select Year</label>
+            <select id="c-year-select" class="select-lg"><option value="">Choose a year</option></select>
           </div>
           <div class="form-group">
-            <label for="c-subject">Lecture Subject</label>
-            <input id="c-subject" type="text" placeholder="Type the subject for this lecture" required>
+            <label for="c-class-select">Select Section</label>
+            <select id="c-class-select" class="select-lg" disabled><option value="">Choose a year first</option></select>
+          </div>
+          <div class="form-group">
+            <label for="c-subject-select">Lecture Subject</label>
+            <select id="c-subject-select" required><option value="">Choose a subject</option></select>
           </div>
 
           <div class="form-row">
@@ -923,7 +922,6 @@
         </div>
         <div class="header-actions">
           <span class="badge ok">Minimum attendance: <span data-min-limit>75</span>%</span>
-          <button class="btn" id="print-report-btn" type="button">🖨️ Print Attendance Register</button>
           <button class="btn primary" id="csv-btn" type="button">📥 Export CSV Sheet</button>
         </div>
       </div>
@@ -996,7 +994,7 @@
         <div>
           <button class="btn-back page-back" type="button" data-app-back>← Back</button>
           <h2>Attendance Settings</h2>
-          <p class="muted">Set the minimum attendance requirement and warning band.</p>
+          <p class="muted">Set the minimum attendance requirement.</p>
         </div>
       </div>
       <div class="card attendance-settings-card">
@@ -1018,11 +1016,7 @@
               <button type="button" class="btn-xs" data-setting-preset="85">85%</button>
             </div>
           </div>
-          <div class="form-group settings-warning-field">
-            <label for="settings-warning-number">Warning band starts below (%)</label>
-            <input id="settings-warning-number" type="number" min="0" max="99" step="1" required>
-            <small class="muted">Must be lower than the minimum attendance requirement.</small>
-          </div>
+
           <div class="settings-preview-box" aria-live="polite">
             <b>Live preview</b>
             <p id="settings-preview-text" class="muted"></p>
@@ -1035,14 +1029,6 @@
         </form>
       </div>
       <div class="card term-management-card"><h3>Semester management</h3><div class="form-row"><label>Academic year <input id="term-academic-year" placeholder="2026 - 2027"></label><label>Semester <select id="term-semester"><option value="1">Semester 1</option><option value="2">Semester 2</option><option value="3">Semester 3</option><option value="4">Semester 4</option><option value="5">Semester 5</option><option value="6">Semester 6</option><option value="7">Semester 7</option><option value="8">Semester 8</option></select></label><label>Start date <input id="term-start-date" type="date"></label><label>End date <input id="term-end-date" type="date"></label><button id="term-create" class="btn" type="button">Create term</button></div><div id="term-list"></div></div>
-      <div class="card data-safety-tools">
-        <h3>Backup and academic year-end</h3>
-        <div class="settings-actions"><button id="backup-download" class="btn" type="button">Download all data</button><label class="btn btn-secondary" for="backup-file">Import backup</label><input id="backup-file" type="file" accept="application/json" hidden></div>
-        <label>Storage use <progress id="storage-usage" max="100" value="0"></progress><span id="storage-usage-label" class="muted">Estimating…</span></label>
-        <hr>
-        <div class="form-row"><label>Department <select id="promotion-department"></select></label><button id="promotion-preview" class="btn" type="button">Preview promotion</button><button id="promotion-apply" class="btn primary" type="button" disabled>Promote students</button></div>
-        <div id="promotion-preview-output" class="muted" aria-live="polite"></div>
-      </div>
     </section>
 
     <section id="v-subjects" class="view">
